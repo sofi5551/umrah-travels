@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-sand text-charcoal font-sans;
+}
+
+.input {
+  @apply w-full rounded-lg border border-sandline bg-white px-4 py-2.5 text-sm text-charcoal outline-none transition-colors focus:border-gold;
+}
+
+::selection {
+  background-color: #c6992e;
+  color: #0b3d33;
+}
+
+:focus-visible {
+  outline: 2px solid #c6992e;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

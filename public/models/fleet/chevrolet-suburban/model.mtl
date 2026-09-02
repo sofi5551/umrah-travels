@@ -1,0 +1,263 @@
+newmtl blackplast
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.1529 0.1529 0.1529
+	Kd 0.1529 0.1529 0.1529
+	Ks 0.3600 0.3600 0.3600
+	Ke 0.0000 0.0000 0.0000
+	map_Ka black.png
+	map_Kd black.png
+
+newmtl Chrome
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.9098 0.9098 0.9098
+	Kd 0.9098 0.9098 0.9098
+	Ks 0.7200 0.7200 0.7200
+	Ke 0.0000 0.0000 0.0000
+	map_Ka water_texture_2.jpeg
+	map_Kd water_texture_2.jpeg
+
+newmtl sticker
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka logo.png
+	map_Kd logo.png
+
+newmtl Material__9570
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka logo3.png
+	map_Kd logo3.png
+
+newmtl stuf
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka stuf1.png
+	map_Kd stuf1.png
+
+newmtl blackplast1
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.2157 0.2157 0.2157
+	Kd 0.2157 0.2157 0.2157
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka black1.png
+	map_Kd black1.png
+
+newmtl Material__9571
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka logo.png
+	map_Kd logo.png
+
+newmtl Material__6873
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+
+newmtl Material__7582
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka plastinter3.png
+	map_Kd plastinter3.png
+
+newmtl tyre
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka sidewall.png
+	map_Kd sidewall.png
+
+newmtl Material__7388
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 12.png
+	map_Kd 12.png
+
+newmtl Material__9457
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+
+newmtl Material__7548
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka met1.png
+	map_Kd met1.png
+
+newmtl wire_000000000
+	Ns 32
+	d 1
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.3500 0.3500 0.3500
+
+newmtl inter01
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka bodypaint.png
+	map_Kd bodypaint.png
+
+newmtl logo
+	Ns 10.0000
+	Ni 1.5000
+	d 0.3000
+	illum 2
+	Ka 0.1333 0.1333 0.1333
+	Kd 0.1333 0.1333 0.1333
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+
+newmtl Material__7390
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka plastinter1.png
+	map_Kd plastinter1.png
+
+newmtl Material__12186
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 1.png
+	map_Kd 1.png
+
+newmtl default
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.9686 0.9686 0.9686
+	Kd 0.9686 0.9686 0.9686
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.1937 0.1937 0.1937
+
+newmtl Material__7389
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka tree.png
+	map_Kd tree.png
+
+newmtl Material__12163
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 14.png
+	map_Kd 14.png
+
+newmtl frlight
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka sub_light.png
+	map_Kd sub_light.png
+
+newmtl tree
+	Ns 10.0000
+	Ni 1.5000
+	d 0.7000
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka sub_light.png
+	map_Kd sub_light.png
