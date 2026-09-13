@@ -1,0 +1,535 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getAdminSession } from "@/lib/getAdminSession";
+import {
+  DEFAULT_BOOKING_NOTE,
+  DEFAULT_COMFORT_NOTE,
+  buildDefaultDescription,
+  buildDefaultServiceDescription,
+} from "@/lib/data";
+
+const FLEET_BUCKET = "fleet-images";
+const REVIEW_AVATAR_BUCKET = "review-avatars";
+const SERVICE_IMAGE_BUCKET = "service-images";
+
+async function requireAdmin() {
+  const session = await getAdminSession();
+  if (!session) redirect("/admin/login");
+  return session;
+}
+
+function requireAdminDb() {
+  if (!supabaseAdmin) throw new Error("Admin database isn't configured yet.");
+  return supabaseAdmin;
+}
+
+function slugify(input: string) {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+// ---------------------------------------------------------------------------
+// Site settings (Contact Details + Social Icons share one row)
+// ---------------------------------------------------------------------------
+
+export async function updateContactDetails(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { error } = await db
+    .from("site_settings")
+    .update({
+      phone: String(formData.get("phone") || ""),
+      whatsapp_number: String(formData.get("whatsapp_number") || ""),
+      email: String(formData.get("email") || ""),
+      address: String(formData.get("address") || ""),
+      address_enabled: formData.get("address_enabled") === "on",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/contact-details");
+}
+
+const SOCIAL_PLATFORMS = [
+  "facebook",
+  "instagram",
+  "youtube",
+  "pinterest",
+  "tiktok",
+  "linkedin",
+  "playstore",
+] as const;
+
+export async function updateSocialLinks(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  for (const platform of SOCIAL_PLATFORMS) {
+    update[`social_${platform}`] = String(formData.get(`social_${platform}`) || "") || null;
+    update[`social_${platform}_enabled`] = formData.get(`social_${platform}_enabled`) === "on";
+  }
+
+  const { error } = await db.from("site_settings").update(update).eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/social-icons");
+}
+
+// ---------------------------------------------------------------------------
+// Fleet
+// ---------------------------------------------------------------------------
+
+async function uploadFleetImage(db: NonNullable<typeof supabaseAdmin>, file: File) {
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from(FLEET_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(`Couldn't upload image: ${error.message}`);
+  const { data } = db.storage.from(FLEET_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function createVehicle(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const name = String(formData.get("name") || "").trim();
+  if (!name) throw new Error("Vehicle name is required.");
+
+  const imageFile = formData.get("image");
+  let imageUrl: string | null = null;
+  if (imageFile instanceof File && imageFile.size > 0) {
+    imageUrl = await uploadFleetImage(db, imageFile);
+  }
+
+  const type = String(formData.get("type") || "");
+  const seats = Number(formData.get("seats") || 0);
+  const description =
+    String(formData.get("description") || "").trim() || buildDefaultDescription({ name, type, seats });
+
+  const { error } = await db.from("fleet").insert({
+    slug: slugify(name) || crypto.randomUUID(),
+    name,
+    type,
+    class_name: String(formData.get("class_name") || ""),
+    seats,
+    luggage: String(formData.get("luggage") || ""),
+    image_url: imageUrl,
+    image_alt: name,
+    sort_order: Number(formData.get("sort_order") || 0),
+    booking_note: String(formData.get("booking_note") || "").trim() || DEFAULT_BOOKING_NOTE,
+    comfort_note: String(formData.get("comfort_note") || "").trim() || DEFAULT_COMFORT_NOTE,
+    description,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/fleet");
+  revalidatePath("/admin/fleet");
+}
+
+export async function updateVehicle(id: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const name = String(formData.get("name") || "").trim();
+  if (!name) throw new Error("Vehicle name is required.");
+
+  const type = String(formData.get("type") || "");
+  const seats = Number(formData.get("seats") || 0);
+
+  const update: Record<string, unknown> = {
+    name,
+    type,
+    class_name: String(formData.get("class_name") || ""),
+    seats,
+    luggage: String(formData.get("luggage") || ""),
+    sort_order: Number(formData.get("sort_order") || 0),
+    image_alt: name,
+    booking_note: String(formData.get("booking_note") || "").trim() || DEFAULT_BOOKING_NOTE,
+    comfort_note: String(formData.get("comfort_note") || "").trim() || DEFAULT_COMFORT_NOTE,
+    description:
+      String(formData.get("description") || "").trim() || buildDefaultDescription({ name, type, seats }),
+  };
+
+  const imageFile = formData.get("image");
+  if (imageFile instanceof File && imageFile.size > 0) {
+    update.image_url = await uploadFleetImage(db, imageFile);
+  }
+
+  const { error } = await db.from("fleet").update(update).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/fleet");
+  revalidatePath("/admin/fleet");
+}
+
+export async function deleteVehicle(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { error } = await db.from("fleet").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/fleet");
+  revalidatePath("/admin/fleet");
+}
+
+// ---------------------------------------------------------------------------
+// Services
+// ---------------------------------------------------------------------------
+
+export async function createService(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const label = String(formData.get("label") || "").trim();
+  if (!label) throw new Error("Label is required.");
+
+  const from_location = String(formData.get("from_location") || "");
+  const to_location = String(formData.get("to_location") || "");
+  const description =
+    String(formData.get("description") || "").trim() ||
+    buildDefaultServiceDescription({ from: from_location, to: to_location });
+
+  const { error } = await db.from("services").insert({
+    slug: slugify(label) || crypto.randomUUID(),
+    label,
+    from_location,
+    to_location,
+    description,
+    sort_order: Number(formData.get("sort_order") || 0),
+    show_return_transfer: formData.get("show_return_transfer") === "on",
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/services");
+  revalidatePath("/admin/services");
+}
+
+export async function updateService(id: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const label = String(formData.get("label") || "").trim();
+  if (!label) throw new Error("Label is required.");
+
+  const from_location = String(formData.get("from_location") || "");
+  const to_location = String(formData.get("to_location") || "");
+  const description =
+    String(formData.get("description") || "").trim() ||
+    buildDefaultServiceDescription({ from: from_location, to: to_location });
+
+  const { error } = await db
+    .from("services")
+    .update({
+      label,
+      from_location,
+      to_location,
+      description,
+      sort_order: Number(formData.get("sort_order") || 0),
+      show_return_transfer: formData.get("show_return_transfer") === "on",
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/services");
+  revalidatePath("/admin/services");
+}
+
+export async function deleteService(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { error } = await db.from("services").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/services");
+  revalidatePath("/admin/services");
+}
+
+// ---------------------------------------------------------------------------
+// Service content blocks (admin-built pricing tables / pricing images)
+// ---------------------------------------------------------------------------
+
+async function getServiceSlug(db: NonNullable<typeof supabaseAdmin>, serviceId: string) {
+  const { data } = await db.from("services").select("slug").eq("id", serviceId).single();
+  return data?.slug as string | undefined;
+}
+
+async function revalidateServiceBlocks(
+  db: NonNullable<typeof supabaseAdmin>,
+  serviceId: string
+) {
+  const slug = await getServiceSlug(db, serviceId);
+  if (slug) revalidatePath(`/services/${slug}`);
+  revalidatePath(`/admin/services/${serviceId}`);
+}
+
+async function uploadServiceImage(db: NonNullable<typeof supabaseAdmin>, file: File) {
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from(SERVICE_IMAGE_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(`Couldn't upload image: ${error.message}`);
+  const { data } = db.storage.from(SERVICE_IMAGE_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function parseTableFields(formData: FormData) {
+  let columns: string[] = [];
+  let rows: string[][] = [];
+  try {
+    columns = JSON.parse(String(formData.get("columns") || "[]"));
+    rows = JSON.parse(String(formData.get("rows") || "[]"));
+  } catch {
+    throw new Error("Invalid table data.");
+  }
+  columns = columns.map((c) => String(c || "").trim());
+  rows = rows.map((row) => row.map((cell) => String(cell || "").trim()));
+  if (columns.length === 0) throw new Error("Add at least one column.");
+  if (rows.length === 0) throw new Error("Add at least one row.");
+  return { columns, rows };
+}
+
+export async function createTableBlock(serviceId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { columns, rows } = parseTableFields(formData);
+
+  const { error } = await db.from("service_blocks").insert({
+    service_id: serviceId,
+    type: "table",
+    heading: String(formData.get("heading") || "").trim() || null,
+    description: String(formData.get("description") || "").trim() || null,
+    columns,
+    rows,
+    sort_order: Number(formData.get("sort_order") || 0),
+    is_hourly: formData.get("is_hourly") === "on",
+  });
+
+  if (error) throw new Error(error.message);
+  await revalidateServiceBlocks(db, serviceId);
+}
+
+export async function updateTableBlock(blockId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing, error: fetchError } = await db
+    .from("service_blocks")
+    .select("service_id")
+    .eq("id", blockId)
+    .single();
+  if (fetchError || !existing) throw new Error("Block not found.");
+
+  const { columns, rows } = parseTableFields(formData);
+
+  const { error } = await db
+    .from("service_blocks")
+    .update({
+      heading: String(formData.get("heading") || "").trim() || null,
+      description: String(formData.get("description") || "").trim() || null,
+      columns,
+      rows,
+      sort_order: Number(formData.get("sort_order") || 0),
+      is_hourly: formData.get("is_hourly") === "on",
+    })
+    .eq("id", blockId);
+
+  if (error) throw new Error(error.message);
+  await revalidateServiceBlocks(db, existing.service_id);
+}
+
+export async function createImageBlock(serviceId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const imageFile = formData.get("image");
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
+    throw new Error("An image is required.");
+  }
+  const imageUrl = await uploadServiceImage(db, imageFile);
+
+  const { error } = await db.from("service_blocks").insert({
+    service_id: serviceId,
+    type: "image",
+    heading: String(formData.get("heading") || "").trim() || null,
+    description: String(formData.get("description") || "").trim() || null,
+    image_url: imageUrl,
+    sort_order: Number(formData.get("sort_order") || 0),
+  });
+
+  if (error) throw new Error(error.message);
+  await revalidateServiceBlocks(db, serviceId);
+}
+
+export async function updateImageBlock(blockId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing, error: fetchError } = await db
+    .from("service_blocks")
+    .select("service_id")
+    .eq("id", blockId)
+    .single();
+  if (fetchError || !existing) throw new Error("Block not found.");
+
+  const update: Record<string, unknown> = {
+    heading: String(formData.get("heading") || "").trim() || null,
+    description: String(formData.get("description") || "").trim() || null,
+    sort_order: Number(formData.get("sort_order") || 0),
+  };
+
+  const imageFile = formData.get("image");
+  if (imageFile instanceof File && imageFile.size > 0) {
+    update.image_url = await uploadServiceImage(db, imageFile);
+  }
+
+  const { error } = await db.from("service_blocks").update(update).eq("id", blockId);
+  if (error) throw new Error(error.message);
+  await revalidateServiceBlocks(db, existing.service_id);
+}
+
+export async function deleteServiceBlock(blockId: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing } = await db
+    .from("service_blocks")
+    .select("service_id")
+    .eq("id", blockId)
+    .single();
+
+  const { error } = await db.from("service_blocks").delete().eq("id", blockId);
+  if (error) throw new Error(error.message);
+
+  if (existing?.service_id) await revalidateServiceBlocks(db, existing.service_id);
+}
+
+// ---------------------------------------------------------------------------
+// Leads / moderation: Quotes, Contacts, Reviews
+// ---------------------------------------------------------------------------
+
+export async function deleteQuote(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+  const { error } = await db.from("bookings").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/quotes");
+}
+
+export async function deleteContact(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+  const { error } = await db.from("contacts").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/contacts");
+}
+
+export async function deleteReview(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+  const { error } = await db.from("reviews").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  revalidatePath("/admin/reviews");
+}
+
+async function uploadReviewAvatar(db: NonNullable<typeof supabaseAdmin>, file: File) {
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from(REVIEW_AVATAR_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(`Couldn't upload photo: ${error.message}`);
+  const { data } = db.storage.from(REVIEW_AVATAR_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function clampRating(raw: FormDataEntryValue | null) {
+  const n = Math.round(Number(raw || 0));
+  return Math.min(5, Math.max(1, n || 5));
+}
+
+/** Admin-created ("fake") review — always source: "admin", so it's editable later. */
+export async function createReview(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const name = String(formData.get("name") || "").trim();
+  const review = String(formData.get("review") || "").trim();
+  if (!name || !review) throw new Error("Name and review text are required.");
+
+  const avatarFile = formData.get("avatar");
+  let avatarUrl: string | null = null;
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    avatarUrl = await uploadReviewAvatar(db, avatarFile);
+  }
+
+  const { error } = await db.from("reviews").insert({
+    name,
+    rating: clampRating(formData.get("rating")),
+    review,
+    avatar_url: avatarUrl,
+    source: "admin",
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/");
+  revalidatePath("/admin/reviews");
+}
+
+/** Only admin-sourced reviews can be edited — user-submitted ones are delete-only. */
+export async function updateReview(id: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing, error: fetchError } = await db
+    .from("reviews")
+    .select("source")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !existing) throw new Error("Review not found.");
+  if (existing.source !== "admin") {
+    throw new Error("This review was submitted by a user and can't be edited.");
+  }
+
+  const name = String(formData.get("name") || "").trim();
+  const review = String(formData.get("review") || "").trim();
+  if (!name || !review) throw new Error("Name and review text are required.");
+
+  const update: Record<string, unknown> = {
+    name,
+    rating: clampRating(formData.get("rating")),
+    review,
+  };
+
+  const avatarFile = formData.get("avatar");
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    update.avatar_url = await uploadReviewAvatar(db, avatarFile);
+  }
+
+  const { error } = await db.from("reviews").update(update).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/");
+  revalidatePath("/admin/reviews");
+}

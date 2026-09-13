@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { fleet } from "@/lib/data";
+import type { Vehicle } from "@/lib/data";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { submitBooking } from "@/lib/bookings";
 
 function todayISO() {
   const now = new Date();
@@ -11,15 +12,28 @@ function todayISO() {
 }
 
 export default function BookingForm({
+  fleet,
+  whatsappNumber,
+  source,
   prefillCar,
   prefillPickup,
   prefillDropoff,
   compact = false,
+  saveTo = "quotes",
 }: {
+  fleet: Vehicle[];
+  /** From getSiteSettings() — drives which number the WhatsApp redirect opens. */
+  whatsappNumber: string;
+  /** Human-readable label for where this submission came from, e.g.
+   * "Homepage" or "Fleet – Toyota Camry" — shown as-is in the admin list. */
+  source: string;
   prefillCar?: string;
   prefillPickup?: string;
   prefillDropoff?: string;
   compact?: boolean;
+  /** Which admin section this submission shows up under. Doesn't change the
+   * WhatsApp behavior — only where the silent background save lands. */
+  saveTo?: "quotes" | "contacts";
 }) {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
@@ -30,7 +44,11 @@ export default function BookingForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const link = buildWhatsAppLink({ name, date, pickup, dropoff, car, passengers });
+    const link = buildWhatsAppLink({ name, date, pickup, dropoff, car, passengers }, whatsappNumber);
+    submitBooking(
+      { name, date, pickup, dropoff, car, passengers, source },
+      saveTo === "contacts" ? "contacts" : "bookings"
+    ).catch((err) => console.error("Failed to save booking:", err));
     window.open(link, "_blank", "noopener,noreferrer");
   }
 

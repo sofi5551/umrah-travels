@@ -3,10 +3,14 @@ import SectionHeading from "@/components/SectionHeading";
 import RouteMotif from "@/components/RouteMotif";
 import HeroModel from "@/components/HeroModel";
 import ScrollReveal from "@/components/ScrollReveal";
-import FleetModelCard from "@/components/FleetModelCard";
+import FleetCard from "@/components/FleetCard";
 import Testimonials from "@/components/Testimonials";
 import Faq from "@/components/Faq";
-import { fleet, faqs, steps, site } from "@/lib/data";
+import WaveDivider from "@/components/WaveDivider";
+import { faqs, steps } from "@/lib/data";
+import { getSiteSettings } from "@/lib/siteSettings";
+import { getFleet } from "@/lib/fleetData";
+import { getServices } from "@/lib/servicesData";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -26,16 +30,6 @@ const trustPoints = [
   "Fixed and transparent pricing",
   "24/7 WhatsApp support",
   "Suitable for families and elderly travelers",
-];
-
-const popularRoutes = [
-  { label: "Makkah to Madinah taxi service", slug: "makkah-to-medina-taxi", from: "Makkah", to: "Madinah" },
-  { label: "Madinah to Makkah private taxi", slug: "madinah-to-makkah-taxi", from: "Madinah", to: "Makkah" },
-  { label: "Madinah Ziyarat tour", slug: "madinah-ziyarat-taxi", from: "Madinah", to: "Ziyarat sites" },
-  { label: "Taif Ziyarat taxi", slug: "taif-ziyarat-taxi", from: "Taif", to: "Ziyarat sites" },
-  { label: "Madinah to Riyadh taxi service", slug: "madinah-to-riyadh-taxi", from: "Madinah", to: "Riyadh" },
-  { label: "Jeddah to Riyadh taxi service", slug: "jeddah-to-riyadh-taxi", from: "Jeddah", to: "Riyadh" },
-  { label: "Makkah to Riyadh taxi service", slug: "makkah-to-riyadh-taxi", from: "Makkah", to: "Riyadh" },
 ];
 
 const coverageParagraphs = [
@@ -181,7 +175,13 @@ const taxiServices = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [settings, fleet, services] = await Promise.all([
+    getSiteSettings(),
+    getFleet(),
+    getServices(),
+  ]);
+
   return (
     <>
       {/* Hero */}
@@ -206,7 +206,7 @@ export default function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <a
-                href={`https://wa.me/${site.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
+                href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-goldsoft"
@@ -237,19 +237,15 @@ export default function HomePage() {
 
       {/* Quote form */}
       <section id="quote" className="relative overflow-hidden border-b border-sandline">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url(/images/safa-marwa.png)" }}
+        <Image
+          src="/images/safa-marwa.png"
+          alt="Safa and Marwa in Makkah"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
         />
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-ink sm:h-24"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-ink" />
         <div className="relative mx-auto max-w-3xl px-4 py-16 sm:px-8">
           <ScrollReveal>
             <div className="rounded-2xl bg-white/60 p-6 shadow-lg backdrop-blur-sm sm:p-10">
@@ -259,7 +255,11 @@ export default function HomePage() {
                 intro="Book instantly on WhatsApp, or share your travel details below and our team will confirm your fare."
               />
               <div className="mt-8">
-                <BookingForm />
+                <BookingForm
+                  fleet={fleet}
+                  whatsappNumber={settings.whatsappNumber}
+                  source="Homepage"
+                />
               </div>
             </div>
           </ScrollReveal>
@@ -350,15 +350,7 @@ export default function HomePage() {
 
       {/* Steps */}
       <section className="relative overflow-hidden bg-white py-16 sm:py-24">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-ink sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-ink" />
         <div className="mx-auto max-w-6xl px-4 sm:px-8">
           <ScrollReveal>
             <SectionHeading
@@ -393,27 +385,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Popular routes */}
+      {/* Services */}
       <section className="relative overflow-hidden bg-ink text-white">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-white sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-white" />
 
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
           <ScrollReveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
                 <p className="text-sm font-medium uppercase tracking-widest text-goldsoft">
-                  Popular routes
+                  Our services
                 </p>
                 <h2 className="mt-3 max-w-xl font-display text-3xl font-medium sm:text-4xl">
-                  Popular routes for Umrah travel
+                  Private transfers for every journey
                 </h2>
                 <p className="mt-4 max-w-xl text-white/70">
                   We arrange private transfers across the most frequently used routes between
@@ -422,30 +406,30 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                href="/routes"
+                href="/services"
                 className="shrink-0 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-goldsoft"
               >
-                View all routes
+                View all services
               </Link>
             </div>
 
             <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {popularRoutes.map((route) => (
+              {services.map((service) => (
                 <Link
-                  key={route.slug}
-                  href={`/routes/${route.slug}`}
+                  key={service.slug}
+                  href={`/services/${service.slug}`}
                   className="group flex flex-col justify-between border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-colors hover:border-gold/60 hover:bg-white/10"
                 >
                   <div>
                     <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-goldsoft">
-                      {route.from} <span className="text-gold">→</span> {route.to}
+                      {service.from} <span className="text-gold">→</span> {service.to}
                     </p>
                     <h3 className="mt-3 font-display text-lg leading-snug text-white">
-                      {route.label}
+                      {service.label}
                     </h3>
                   </div>
                   <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-white/70 group-hover:text-gold">
-                    View route
+                    View service
                     <span className="transition-transform group-hover:translate-x-1">→</span>
                   </span>
                 </Link>
@@ -456,7 +440,7 @@ export default function HomePage() {
               Detailed route information, estimated travel time, and pricing are available on
               dedicated pages. You can also{" "}
               <a
-                href={`https://wa.me/${site.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20guidance%20on%20a%20travel%20route`}
+                href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20guidance%20on%20a%20travel%20route`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gold underline-offset-2 hover:underline"
@@ -471,15 +455,7 @@ export default function HomePage() {
 
       {/* Fleet */}
       <section className="relative overflow-hidden bg-white py-16 sm:py-24">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-ink sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-ink" />
         <div className="mx-auto max-w-6xl px-4 sm:px-8">
           <ScrollReveal>
             <div className="max-w-2xl">
@@ -501,9 +477,9 @@ export default function HomePage() {
               travel experience.
             </p>
 
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {fleet.map((vehicle) => (
-                <FleetModelCard key={vehicle.slug} vehicle={vehicle} />
+                <FleetCard key={vehicle.slug} vehicle={vehicle} whatsappNumber={settings.whatsappNumber} />
               ))}
             </div>
           </ScrollReveal>
@@ -512,15 +488,7 @@ export default function HomePage() {
 
       {/* Pricing teaser */}
       <section className="relative overflow-hidden bg-ink text-white">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-white sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-white" />
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
           <ScrollReveal>
             <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-16">
@@ -543,10 +511,10 @@ export default function HomePage() {
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link
-                    href="/pricing"
+                    href="/services"
                     className="rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-goldsoft"
                   >
-                    See pricing
+                    View our services
                   </Link>
                   <a
                     href="#quote"
@@ -585,6 +553,7 @@ export default function HomePage() {
           alt="Masjid an-Nabawi in Madinah at night"
           fill
           sizes="100vw"
+          priority
           className="object-cover"
         />
         <div className="pointer-events-none absolute inset-0 bg-black/45" />
@@ -598,11 +567,11 @@ export default function HomePage() {
               Why choose us
             </p>
             <h2 className="mt-3 font-display text-3xl font-medium sm:text-4xl">
-              Why pilgrims choose VIP Umrah Taxi
+              Why pilgrims choose Haramain Ways
             </h2>
             <p className="mt-5 font-medium text-white/90">
               Choosing the right transport provider is important for a smooth and well-organized
-              Umrah journey. VIP Umrah Taxi focuses on reliability, clear communication, and
+              Umrah journey. Haramain Ways focuses on reliability, clear communication, and
               consistent service quality across every booking.
             </p>
 
@@ -669,15 +638,7 @@ export default function HomePage() {
 
       {/* FAQ */}
       <section className="relative overflow-hidden bg-ink text-white">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-white sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-white" />
         <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
           <ScrollReveal>
             <p className="text-sm font-medium uppercase tracking-widest text-goldsoft">FAQ</p>
@@ -693,15 +654,7 @@ export default function HomePage() {
 
       {/* Final CTA */}
       <section className="relative overflow-hidden bg-white">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-ink sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-ink" />
         <div className="relative mx-auto max-w-2xl px-4 py-16 text-center sm:px-8 sm:py-24">
           <ScrollReveal>
             <p className="text-sm font-medium uppercase tracking-widest text-gold">
@@ -715,7 +668,7 @@ export default function HomePage() {
               booking confirmed within minutes.
             </p>
             <a
-              href={`https://wa.me/${site.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
+              href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold px-8 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-goldsoft"
@@ -728,15 +681,7 @@ export default function HomePage() {
           </ScrollReveal>
         </div>
 
-        <svg
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full rotate-180 text-inkdeep sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

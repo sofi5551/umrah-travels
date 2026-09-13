@@ -123,16 +123,16 @@ function SplashScreen({
             strokeDasharray="60 216"
           />
         </svg>
-        <svg viewBox="0 0 100 100" className="h-10 w-10 animate-pulse-slow" aria-hidden>
-          <polygon points="50,8 92,30 92,70 50,92 8,70 8,30" fill="none" stroke="#E7CE8C" strokeWidth="2" />
-          <polygon points="50,8 92,30 50,52 8,30" fill="#C6992E" fillOpacity="0.35" />
-          <line x1="50" y1="52" x2="50" y2="92" stroke="#E7CE8C" strokeWidth="1.2" />
-          <line x1="8" y1="30" x2="8" y2="70" stroke="#E7CE8C" strokeWidth="1.2" />
-          <line x1="92" y1="30" x2="92" y2="70" stroke="#E7CE8C" strokeWidth="1.2" />
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icon.png"
+          alt=""
+          className="h-12 w-12 animate-pulse-slow object-contain"
+          aria-hidden
+        />
       </div>
 
-      <p className="mt-7 font-display text-xl font-medium tracking-wide text-white">VIP Umrah Taxi</p>
+      <p className="mt-7 font-display text-xl font-medium tracking-wide text-white">Haramain Ways</p>
       <p className="mt-1.5 text-xs uppercase tracking-[0.2em] text-goldsoft/80">Preparing your journey</p>
 
       <div className="mt-8 h-[3px] w-48 overflow-hidden rounded-full bg-white/10">

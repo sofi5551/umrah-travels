@@ -1,8 +1,8 @@
 export const site = {
-  name: "VIP Umrah Taxi",
+  name: "Haramain Ways",
   phone: "+923078970656",
   whatsappNumber: "923078970656",
-  email: "contact@vipumrahtaxi.com",
+  email: "contact@haramainways.com",
   address:
     "Al-Aziziyah Al-Janoubiyah, King Khalid Bridge, Aljamia District, Makkah - C.R 7050292502",
   social: {
@@ -17,61 +17,32 @@ export const site = {
   },
 };
 
-export type CabRoute = {
-  slug: string;
-  from: string;
-  to: string;
-  label: string;
-  blurb: string;
-};
-
-// The 16 route links from the original site's "Umrah Cab" menu.
-export const routes: CabRoute[] = [
-  { slug: "jeddah-to-madinah-taxi", from: "Jeddah", to: "Madinah", label: "Jeddah to Madinah Cab", blurb: "Direct transfer from Jeddah's airport or hotels straight to Madinah, timed around your flight." },
-  { slug: "jeddah-to-makkah-taxi", from: "Jeddah", to: "Makkah", label: "Jeddah to Makkah Cab", blurb: "The most requested pilgrim route — airport to Haram, door to door, no transfers." },
-  { slug: "jeddah-ziyarat-taxi", from: "Jeddah", to: "Ziyarat sites", label: "Jeddah Ziyarat Cab", blurb: "A private driver for the day to visit Jeddah's historic and religious sites at your pace." },
-  { slug: "madinah-to-makkah-taxi", from: "Madinah", to: "Makkah", label: "Madinah to Makkah Cab", blurb: "Comfortable intercity transfer between the two holy cities, with prayer-time stops on request." },
-  { slug: "madinah-ziyarat-taxi", from: "Madinah", to: "Ziyarat sites", label: "Madinah Ziyarat Cab", blurb: "Visit Quba Mosque, Mount Uhud, and the Seven Mosques with a driver who knows the route well." },
-  { slug: "makkah-to-jeddah-taxi", from: "Makkah", to: "Jeddah", label: "Makkah to Jeddah Cab", blurb: "Return transfer from Makkah to Jeddah's airport or city hotels, timed to your flight." },
-  { slug: "makkah-ziyarat-taxi", from: "Makkah", to: "Ziyarat sites", label: "Makkah Ziyarat Cab", blurb: "A guided-pace tour of Jabal al-Noor, Jabal Thawr, and Makkah's other historic sites." },
-  { slug: "makkah-to-medina-taxi", from: "Makkah", to: "Madinah", label: "Makkah to Madinah Cab", blurb: "Private transfer from Makkah to Madinah, non-stop or with rest breaks as you prefer." },
-  { slug: "madinah-to-jeddah-taxi", from: "Madinah", to: "Jeddah", label: "Madinah to Jeddah Cab", blurb: "Airport-bound transfer from Madinah to Jeddah, coordinated with your departure time." },
-  { slug: "taif-ziyarat-taxi", from: "Taif", to: "Ziyarat sites", label: "Taif Ziyarat Cab", blurb: "A cooler-climate day trip to Taif's gardens and historic sites, door to door." },
-  { slug: "madinah-to-riyadh-taxi", from: "Madinah", to: "Riyadh", label: "Madinah to Riyadh Cab", blurb: "Long-distance intercity transfer between Madinah and the capital, in a private vehicle." },
-  { slug: "riyadh-to-madinah-taxi", from: "Riyadh", to: "Madinah", label: "Riyadh to Madinah Cab", blurb: "Private transfer from Riyadh to Madinah for pilgrims routing through the capital." },
-  { slug: "jeddah-to-riyadh-taxi", from: "Jeddah", to: "Riyadh", label: "Jeddah to Riyadh Cab", blurb: "Direct road transfer connecting Jeddah and Riyadh for business or pilgrim travel." },
-  { slug: "riyadh-to-jeddah-taxi", from: "Riyadh", to: "Jeddah", label: "Riyadh to Jeddah Cab", blurb: "Comfortable long-distance transfer from Riyadh back to Jeddah." },
-  { slug: "makkah-to-riyadh-taxi", from: "Makkah", to: "Riyadh", label: "Makkah to Riyadh Cab", blurb: "Private intercity travel between Makkah and Riyadh, with luggage space for groups." },
-  { slug: "riyadh-to-makkah-taxi", from: "Riyadh", to: "Makkah", label: "Riyadh to Makkah Cab", blurb: "Transfer from Riyadh into Makkah, arranged in advance with a confirmed vehicle." },
-];
-
-export type FareRoute = {
+export type ServicePage = {
+  /** DB row id — undefined for hardcoded fallback services (no admin content blocks to fetch). */
+  id?: string;
   slug: string;
   label: string;
   from: string;
   to: string;
+  description: string;
+  /** Admin-controlled: shows the "Return transfer" promo card on this page. */
+  showReturnTransfer?: boolean;
 };
 
-// The 6 fare pages linked from the original site's "Pricing" menu.
-export const fareRoutes: FareRoute[] = [
-  { slug: "makkah-to-jeddah-taxi-fare", label: "Makkah to Jeddah Taxi Fare", from: "Makkah", to: "Jeddah" },
-  { slug: "jeddah-to-madinah-taxi-fare", label: "Jeddah to Madinah Taxi Fare", from: "Jeddah", to: "Madinah" },
-  { slug: "madinah-to-makkah-taxi-fare", label: "Madinah to Makkah Taxi Fare", from: "Madinah", to: "Makkah" },
-  { slug: "makkah-to-madinah-taxi-fare", label: "Makkah to Madinah Taxi Fare", from: "Makkah", to: "Madinah" },
-  { slug: "madinah-to-riyadh-taxi-fare", label: "Madinah ↔ Riyadh Taxi Fare", from: "Madinah", to: "Riyadh" },
-  { slug: "jeddah-to-riyadh-taxi-fare", label: "Jeddah ↔ Riyadh Taxi Fare", from: "Jeddah", to: "Riyadh" },
+/** Used when a service page has no custom description set. */
+export function buildDefaultServiceDescription(input: { from: string; to: string }) {
+  return `Your ${input.from} to ${input.to} transfer is arranged as a private, door-to-door journey. We confirm your vehicle, schedule, and fare in advance, and your driver plans the route around traffic and prayer times.`;
+}
+
+// Seed/fallback services, shown when Supabase isn't configured yet.
+export const services: ServicePage[] = [
+  { slug: "makkah-to-jeddah", label: "Makkah to Jeddah", from: "Makkah", to: "Jeddah", description: buildDefaultServiceDescription({ from: "Makkah", to: "Jeddah" }) },
+  { slug: "jeddah-to-madinah", label: "Jeddah to Madinah", from: "Jeddah", to: "Madinah", description: buildDefaultServiceDescription({ from: "Jeddah", to: "Madinah" }) },
+  { slug: "madinah-to-makkah", label: "Madinah to Makkah", from: "Madinah", to: "Makkah", description: buildDefaultServiceDescription({ from: "Madinah", to: "Makkah" }) },
+  { slug: "makkah-to-madinah", label: "Makkah to Madinah", from: "Makkah", to: "Madinah", description: buildDefaultServiceDescription({ from: "Makkah", to: "Madinah" }) },
+  { slug: "madinah-riyadh", label: "Madinah ↔ Riyadh", from: "Madinah", to: "Riyadh", description: buildDefaultServiceDescription({ from: "Madinah", to: "Riyadh" }) },
+  { slug: "jeddah-riyadh", label: "Jeddah ↔ Riyadh", from: "Jeddah", to: "Riyadh", description: buildDefaultServiceDescription({ from: "Jeddah", to: "Riyadh" }) },
 ];
-
-export type VehicleModel = {
-  format: "glb" | "fbx" | "obj";
-  url: string;
-  mtlUrl?: string;
-  resourcePath?: string;
-  textureOverrides?: { mesh: string; map?: string; color?: string }[];
-  // false for large files (40MB+) that shouldn't block the full-screen boot
-  // loader — they still load and fade in on their own. Defaults to true.
-  critical?: boolean;
-};
 
 export type Vehicle = {
   slug: string;
@@ -81,20 +52,23 @@ export type Vehicle = {
   seats: number;
   luggage: string;
   hasDetailPage: boolean;
-  model?: VehicleModel;
+  image: string;
+  imageAlt: string;
+  bookingNote: string;
+  comfortNote: string;
+  description: string;
 };
 
+export const DEFAULT_BOOKING_NOTE = "100% private & non-shared";
+export const DEFAULT_COMFORT_NOTE = "Air-conditioned, regularly maintained";
+
+/** Used when a vehicle has no custom description set — keeps it accurate to
+ * whatever name/type/seats the admin has entered rather than going stale. */
+export function buildDefaultDescription(input: { name: string; type: string; seats: number }) {
+  return `The ${input.name} is assigned for ${input.type.toLowerCase()} transfers carrying up to ${input.seats} passengers, suited to Umrah and Hajj travel between Makkah, Madinah, Jeddah, and Taif.`;
+}
+
 export const fleet: Vehicle[] = [
-  {
-    slug: "hyundai-sonata",
-    name: "Hyundai Sonata",
-    type: "Sedan",
-    className: "Economy Class",
-    seats: 4,
-    luggage: "2–3 bags",
-    hasDetailPage: false,
-    model: { format: "glb", url: "/models/fleet/hyundai-sonata/model.glb" },
-  },
   {
     slug: "toyota-camry",
     name: "Toyota Camry",
@@ -102,38 +76,12 @@ export const fleet: Vehicle[] = [
     className: "Economy Class",
     seats: 4,
     luggage: "2–3 bags",
-    hasDetailPage: false,
-    model: { format: "glb", url: "/models/fleet/toyota-camry/model.glb" },
-  },
-  {
-    slug: "chevrolet-suburban",
-    name: "Chevrolet Suburban",
-    type: "SUV",
-    className: "Luxury Class",
-    seats: 7,
-    luggage: "6–8 bags",
-    hasDetailPage: false,
-    model: {
-      format: "obj",
-      url: "/models/fleet/chevrolet-suburban/model.obj",
-      mtlUrl: "/models/fleet/chevrolet-suburban/model.mtl",
-      resourcePath: "/models/fleet/chevrolet-suburban/textures/",
-    },
-  },
-  {
-    slug: "gmc-yukon-xl",
-    name: "GMC Yukon XL",
-    type: "SUV",
-    className: "Luxury Class",
-    seats: 7,
-    luggage: "6–8 bags",
     hasDetailPage: true,
-    model: {
-      format: "fbx",
-      url: "/models/fleet/gmc-yukon-xl/model.fbx",
-      resourcePath: "/models/fleet/gmc-yukon-xl/textures/",
-      critical: false,
-    },
+    image: "/images/fleet/toyota-camry.jpeg",
+    imageAlt: "White Toyota Camry 2021-2024 in Makkah, Saudi Arabia",
+    bookingNote: DEFAULT_BOOKING_NOTE,
+    comfortNote: DEFAULT_COMFORT_NOTE,
+    description: buildDefaultDescription({ name: "Toyota Camry", type: "Sedan", seats: 4 }),
   },
   {
     slug: "hyundai-staria",
@@ -143,22 +91,39 @@ export const fleet: Vehicle[] = [
     seats: 7,
     luggage: "8–10 bags",
     hasDetailPage: true,
-    model: {
-      format: "fbx",
-      url: "/models/fleet/hyundai-staria/model.fbx",
-      resourcePath: "/models/fleet/hyundai-staria/textures/",
-      critical: false,
-    },
+    image: "/images/fleet/hyundai-staria.jpeg",
+    imageAlt: "Black Hyundai Staria 2022 passenger van for Haramain transport",
+    bookingNote: DEFAULT_BOOKING_NOTE,
+    comfortNote: DEFAULT_COMFORT_NOTE,
+    description: buildDefaultDescription({ name: "Hyundai Staria", type: "Minivan", seats: 7 }),
+  },
+  {
+    slug: "gmc-yukon-denali",
+    name: "GMC Yukon Denali",
+    type: "SUV",
+    className: "Luxury Class",
+    seats: 7,
+    luggage: "6–8 bags",
+    hasDetailPage: true,
+    image: "/images/fleet/gmc-yukon-denali.jpeg",
+    imageAlt: "Black GMC Yukon Denali 2021-2024 in Makkah, Saudi Arabia",
+    bookingNote: DEFAULT_BOOKING_NOTE,
+    comfortNote: DEFAULT_COMFORT_NOTE,
+    description: buildDefaultDescription({ name: "GMC Yukon Denali", type: "SUV", seats: 7 }),
   },
   {
     slug: "toyota-hiace",
-    name: "Toyota Hiace",
+    name: "Toyota HiAce",
     type: "Minibus",
     className: "Large Group Transport",
     seats: 11,
     luggage: "16–17 bags",
     hasDetailPage: true,
-    model: { format: "fbx", url: "/models/fleet/toyota-hiace/model.fbx" },
+    image: "/images/fleet/toyota-hiace.jpeg",
+    bookingNote: DEFAULT_BOOKING_NOTE,
+    comfortNote: DEFAULT_COMFORT_NOTE,
+    imageAlt: "White Toyota HiAce 2019 passenger van for Haramain transport",
+    description: buildDefaultDescription({ name: "Toyota HiAce", type: "Minibus", seats: 11 }),
   },
 ];
 
@@ -169,6 +134,10 @@ export type Review = {
   review: string;
   avatarUrl?: string | null;
   createdAt: string;
+  /** "user" = submitted through the public review form (delete-only in
+   * admin). "admin" = added/edited from the admin panel. Undefined for the
+   * hardcoded fallback below, which is display-only and never edited. */
+  source?: "user" | "admin";
 };
 
 // Seed reviews — always shown alongside whatever's been submitted through the

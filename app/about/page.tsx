@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import WaveDivider from "@/components/WaveDivider";
 
-export const metadata = { title: "About | VIP Umrah Taxi" };
+export const metadata = { title: "About | Haramain Ways" };
 
 const specializations = [
   "Private airport transfers",
@@ -106,7 +107,7 @@ export default function AboutPage() {
 
           <div className="mt-6 space-y-4 font-medium leading-relaxed text-white/90">
             <p>
-              At VIP Umrah Taxi, we are more than just a transportation service. We are a
+              At Haramain Ways, we are more than just a transportation service. We are a
               pilgrim-focused travel team dedicated to delivering a smooth, comfortable, and
               dependable Umrah and Hajj transportation experience across Saudi Arabia.
             </p>
@@ -183,15 +184,7 @@ export default function AboutPage() {
 
       {/* Our Core Values */}
       <section className="relative overflow-hidden bg-ink text-white">
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 w-full text-white sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-white" />
 
         <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
           <p className="text-sm font-medium uppercase tracking-widest text-goldsoft">
@@ -217,15 +210,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <svg
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full rotate-180 text-inkdeep sm:h-20"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-        </svg>
+        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

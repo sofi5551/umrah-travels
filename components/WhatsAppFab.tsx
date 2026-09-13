@@ -1,9 +1,9 @@
-import { site } from "@/lib/data";
+import type { SiteSettings } from "@/lib/siteSettings";
 
-export default function WhatsAppFab() {
+export default function WhatsAppFab({ settings }: { settings: SiteSettings }) {
   return (
     <a
-      href={`https://wa.me/${site.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
+      href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Get a taxi instantly on WhatsApp"

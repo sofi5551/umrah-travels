@@ -12,9 +12,11 @@ export type NewReview = {
 };
 
 /**
- * All reviews, newest first: whatever's live in Supabase merged with the
- * fixed seed reviews (which are always shown regardless of DB state). Falls
- * back to seed-only if Supabase isn't configured yet or the fetch fails.
+ * All reviews, newest first, straight from Supabase (this now includes the
+ * former "seed" reviews, migrated into the table as source: "admin" rows so
+ * they're editable). Falls back to the hardcoded testimonials only when
+ * Supabase isn't configured yet, the query fails, or the table is empty —
+ * never merged with live data, which would double up the migrated seed rows.
  */
 export async function fetchReviews(): Promise<Review[]> {
   if (!isSupabaseConfigured || !supabase) {
@@ -23,10 +25,10 @@ export async function fetchReviews(): Promise<Review[]> {
 
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, name, rating, review, avatar_url, created_at")
+    .select("id, name, rating, review, avatar_url, created_at, source")
     .order("created_at", { ascending: false });
 
-  if (error || !data) {
+  if (error || !data || data.length === 0) {
     return sortByNewest(testimonials);
   }
 
@@ -37,9 +39,10 @@ export async function fetchReviews(): Promise<Review[]> {
     review: row.review,
     avatarUrl: row.avatar_url,
     createdAt: row.created_at,
+    source: row.source,
   }));
 
-  return sortByNewest([...live, ...testimonials]);
+  return sortByNewest(live);
 }
 
 /**
@@ -80,8 +83,9 @@ export async function submitReview(input: NewReview): Promise<Review> {
       rating: input.rating,
       review: input.review,
       avatar_url: avatarUrl,
+      source: "user",
     })
-    .select("id, name, rating, review, avatar_url, created_at")
+    .select("id, name, rating, review, avatar_url, created_at, source")
     .single();
 
   if (error || !data) {
@@ -95,6 +99,7 @@ export async function submitReview(input: NewReview): Promise<Review> {
     review: data.review,
     avatarUrl: data.avatar_url,
     createdAt: data.created_at,
+    source: data.source,
   };
 }
 

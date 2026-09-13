@@ -1,7 +1,10 @@
+import Image from "next/image";
 import BookingForm from "@/components/BookingForm";
-import { site } from "@/lib/data";
+import { getSiteSettings } from "@/lib/siteSettings";
+import { getFleet } from "@/lib/fleetData";
+import WaveDivider from "@/components/WaveDivider";
 
-export const metadata = { title: "Contact | VIP Umrah Taxi" };
+export const metadata = { title: "Contact | Haramain Ways" };
 
 function IconPhone() {
   return (
@@ -27,45 +30,65 @@ function IconMapPin() {
   );
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const [settings, fleet] = await Promise.all([getSiteSettings(), getFleet()]);
+
   const contactDetails = [
     {
       icon: IconPhone,
       label: "Phone / WhatsApp",
-      value: site.phone,
-      href: `tel:${site.phone}`,
+      value: settings.phone,
+      href: `tel:${settings.phone}`,
     },
     {
       icon: IconMail,
       label: "Email",
-      value: site.email,
-      href: `mailto:${site.email}`,
+      value: settings.email,
+      href: `mailto:${settings.email}`,
     },
-    {
-      icon: IconMapPin,
-      label: "Head office",
-      value: site.address,
-      href: undefined,
-    },
+    ...(settings.addressEnabled
+      ? [
+          {
+            icon: IconMapPin,
+            label: "Head office",
+            value: settings.address,
+            href: undefined as string | undefined,
+          },
+        ]
+      : []),
   ];
 
   return (
-    <section className="relative overflow-hidden bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
-        <p className="text-sm font-medium uppercase tracking-widest text-gold">Get in touch</p>
-        <h1 className="mt-3 font-display text-3xl font-medium text-ink sm:text-4xl">
-          Contact us
-        </h1>
-        <p className="mt-4 max-w-xl leading-relaxed text-stone">
-          Book instantly on WhatsApp, or reach out directly — we&rsquo;re available 24/7.
-        </p>
+    <section className="relative overflow-hidden">
+      <Image
+        src="/images/contact-page.png"
+        alt="Masjid al-Haram and the Makkah Royal Clock Tower at sunset"
+        fill
+        sizes="100vw"
+        priority
+        className="object-cover"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-ink/55" />
+
+      <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
+        <div style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>
+          <p className="text-sm font-medium uppercase tracking-widest text-goldsoft">
+            Get in touch
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-medium text-white sm:text-4xl">
+            Contact us
+          </h1>
+          <p className="mt-4 max-w-xl leading-relaxed text-white/80">
+            Book instantly on WhatsApp, or reach out directly — we&rsquo;re available 24/7.
+          </p>
+        </div>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
             <div className="space-y-4">
               {contactDetails.map(({ icon: Icon, label, value, href }) => {
                 const content = (
-                  <div className="flex items-start gap-4 border border-sandline bg-sand/40 p-5 transition-colors hover:border-gold">
+                  <div className="flex items-start gap-4 border border-white/30 bg-white/90 p-5 shadow-lg backdrop-blur-sm transition-colors hover:border-gold">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink">
                       <span className="h-5 w-5">
                         <Icon />
@@ -90,7 +113,7 @@ export default function ContactPage() {
             </div>
 
             <a
-              href={`https://wa.me/${site.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
+              href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-goldsoft"
@@ -108,21 +131,19 @@ export default function ContactPage() {
               Share your travel details and our team will confirm your fare.
             </p>
             <div className="mt-6">
-              <BookingForm compact />
+              <BookingForm
+                compact
+                fleet={fleet}
+                whatsappNumber={settings.whatsappNumber}
+                source="Contact Page"
+                saveTo="contacts"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <svg
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full rotate-180 text-inkdeep sm:h-20"
-        viewBox="0 0 1440 100"
-        preserveAspectRatio="none"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M0,0 L1440,0 L1440,40 C1200,85 960,15 720,55 C480,90 240,10 0,55 Z" />
-      </svg>
+      <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
     </section>
   );
 }

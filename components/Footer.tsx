@@ -1,18 +1,27 @@
 import Link from "next/link";
-import { routes, site } from "@/lib/data";
+import type { ServicePage } from "@/lib/data";
+import type { SiteSettings } from "@/lib/siteSettings";
 
-const socialLinks = [
-  { label: "Facebook", href: site.social.facebook },
-  { label: "Instagram", href: site.social.instagram },
-  { label: "YouTube", href: site.social.youtube },
-  { label: "Pinterest", href: site.social.pinterest },
-  { label: "TikTok", href: site.social.tiktok },
-  { label: "LinkedIn", href: site.social.linkedin },
-];
+export default function Footer({
+  settings,
+  services,
+}: {
+  settings: SiteSettings;
+  services: ServicePage[];
+}) {
+  const socialLinks = [
+    { label: "Facebook", link: settings.social.facebook },
+    { label: "Instagram", link: settings.social.instagram },
+    { label: "YouTube", link: settings.social.youtube },
+    { label: "Pinterest", link: settings.social.pinterest },
+    { label: "TikTok", link: settings.social.tiktok },
+    { label: "LinkedIn", link: settings.social.linkedin },
+  ]
+    .filter((s) => s.link.enabled && s.link.url)
+    .map((s) => ({ label: s.label, href: s.link.url }));
 
-export default function Footer() {
   return (
-    <footer className="bg-inkdeep text-white/80">
+    <footer className="bg-inkdeep text-white/80 transition-[filter] duration-300 hover:brightness-90">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8">
         <p className="max-w-2xl text-sm leading-relaxed text-white/70">
           We provide safe and reliable transportation for Umrah and Hajj
@@ -24,10 +33,10 @@ export default function Footer() {
           <div>
             <h3 className="font-display text-base text-white">Our Services</h3>
             <ul className="mt-4 space-y-2 text-sm">
-              {routes.slice(0, 6).map((r) => (
-                <li key={r.slug}>
-                  <Link href={`/routes/${r.slug}`} className="hover:text-gold">
-                    {r.label}
+              {services.map((s) => (
+                <li key={s.slug}>
+                  <Link href={`/services/${s.slug}`} className="hover:text-gold">
+                    {s.label}
                   </Link>
                 </li>
               ))}
@@ -41,17 +50,18 @@ export default function Footer() {
               <li><Link href="/contact" className="hover:text-gold">Contact</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-gold">Privacy Policy</Link></li>
               <li><Link href="/terms-and-conditions" className="hover:text-gold">Terms and Conditions</Link></li>
-              <li><Link href="/umrah-insights" className="hover:text-gold">Umrah Insights</Link></li>
-              <li><Link href="/pricing" className="hover:text-gold">Pricing</Link></li>
+              <li><Link href="/umrah-insights" className="hover:text-gold">Umrah Visa</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-display text-base text-white">Get in touch</h3>
             <ul className="mt-4 space-y-2 text-sm">
-              <li><a href={`tel:${site.phone}`} className="hover:text-gold">{site.phone}</a></li>
-              <li><a href={`mailto:${site.email}`} className="hover:text-gold">{site.email}</a></li>
-              <li className="pt-2 text-white/60">{site.address}</li>
+              <li><a href={`tel:${settings.phone}`} className="hover:text-gold">{settings.phone}</a></li>
+              <li><a href={`mailto:${settings.email}`} className="hover:text-gold">{settings.email}</a></li>
+              {settings.addressEnabled && (
+                <li className="pt-2 text-white/60">{settings.address}</li>
+              )}
             </ul>
           </div>
         </div>
@@ -71,7 +81,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-8 text-xs text-white/50">
-          © {new Date().getFullYear()} VIP Umrah Taxi — All Rights Reserved.
+          © {new Date().getFullYear()} Haramain Ways — All Rights Reserved.
         </p>
       </div>
     </footer>

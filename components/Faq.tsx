@@ -9,7 +9,7 @@ export default function Faq({
   items: { q: string; a: string }[];
   variant?: "light" | "dark";
 }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (variant === "dark") {
     return (

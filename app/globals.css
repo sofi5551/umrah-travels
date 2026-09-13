@@ -24,6 +24,31 @@ body {
   outline-offset: 2px;
 }
 
+.themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c6992e #f1ead9;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: #f1ead9;
+  border-radius: 9999px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #c6992e;
+  border-radius: 9999px;
+  border: 2px solid #f1ead9;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #0b3d33;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

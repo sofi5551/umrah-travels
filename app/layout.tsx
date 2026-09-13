@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import WhatsAppFab from "@/components/WhatsAppFab";
-import GlobalLoaderProvider from "@/components/GlobalLoader";
+import SiteChrome from "@/components/SiteChrome";
 import ToastProvider from "@/components/Toast";
+import { getSiteSettings } from "@/lib/siteSettings";
+import { getFleet } from "@/lib/fleetData";
+import { getServices } from "@/lib/servicesData";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -21,27 +21,30 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "VIP Umrah Taxi | Online Umrah Taxi Service in Saudi Arabia",
+  title: "Haramain Ways | Online Umrah Taxi Service in Saudi Arabia",
   description:
     "Book a private Umrah taxi with licensed chauffeurs in Saudi Arabia. Airport transfers, intercity travel & Ziyarat services for families and pilgrims.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [settings, fleet, services] = await Promise.all([
+    getSiteSettings(),
+    getFleet(),
+    getServices(),
+  ]);
+
   return (
     <html lang="en" className={`${fraunces.variable} ${manrope.variable}`}>
       <body>
-        <GlobalLoaderProvider>
-          <ToastProvider>
-            <Header />
-            <main id="main">{children}</main>
-            <Footer />
-            <WhatsAppFab />
-          </ToastProvider>
-        </GlobalLoaderProvider>
+        <ToastProvider>
+          <SiteChrome settings={settings} fleet={fleet} services={services}>
+            {children}
+          </SiteChrome>
+        </ToastProvider>
       </body>
     </html>
   );
