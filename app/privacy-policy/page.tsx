@@ -1,7 +1,7 @@
 import Link from "next/link";
 import WaveDivider from "@/components/WaveDivider";
 import { Section, Bullets } from "@/components/LegalSection";
-
+import { getSiteSettings } from "@/lib/siteSettings";
 export const metadata = { title: "Privacy Policy | Haramain Ways" };
 
 const sections = [
@@ -33,7 +33,8 @@ const rights = [
   "Object to the processing of your personal data",
 ];
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const settings = await getSiteSettings();
   return (
     <>
       {/* Header */}
@@ -223,19 +224,50 @@ export default function PrivacyPolicyPage() {
 
               <Section id="contact-us" title="Contact Us">
                 <p>If you have any questions about this Privacy Policy, please contact us at:</p>
-                <div className="mt-2 flex flex-wrap items-center gap-4 border border-sandline bg-sand/40 p-5">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
-                      <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" />
-                    </svg>
+                <div className="mt-2 space-y-3">
+                  <div className="flex flex-wrap items-center gap-4 border border-sandline bg-sand/40 p-5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+                        <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 3.3c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.2 1.1L6.6 10.8z" />
+                      </svg>
+                    </div>
+                    <a href={`tel:${settings.whatsappNumber}`} className="font-medium text-ink hover:text-gold">
+                      {settings.whatsappNumber}
+                    </a>
                   </div>
-                  <a
-                    href="mailto:contact@haramainways.com"
-                    className="font-medium text-ink hover:text-gold"
-                  >
-                    contact@haramainways.com
-                  </a>
+                  <div className="flex flex-wrap items-center gap-4 border border-sandline bg-sand/40 p-5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+                        <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" />
+                      </svg>
+                    </div>
+                    <a
+                      href={`mailto:${settings.email}`}
+                      className="font-medium text-ink hover:text-gold"
+                    >
+                      {settings.email}
+                    </a>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4 border border-sandline bg-sand/40 p-5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink">
+                      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+                        <path
+                          d="M3.5 9h17M3.5 15h17M12 3c2.2 2.5 3.4 5.6 3.4 9s-1.2 6.5-3.4 9c-2.2-2.5-3.4-5.6-3.4-9S9.8 5.5 12 3z"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                        />
+                      </svg>
+                    </div>
+                    <a
+                      href="https://haramainways.com"
+                      className="font-medium text-ink hover:text-gold"
+                    >
+                      haramainways.com
+                    </a>
+                  </div>
                 </div>
+
               </Section>
 
               <p className="border-t border-sandline pt-8 text-sm text-stone">
