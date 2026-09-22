@@ -102,7 +102,7 @@ export default async function UmrahInsightsPage() {
             ))}
           </div>
         </div>
-        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+        <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

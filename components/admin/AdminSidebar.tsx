@@ -15,9 +15,19 @@ const navItems = [
   { href: "/admin/contact-details", label: "Contact Details", icon: IconContactDetails },
   { href: "/admin/fleet", label: "Fleet", icon: IconFleet },
   { href: "/admin/services", label: "Services", icon: IconPricing },
+  { href: "/admin/ziyarat", label: "Ziyarat", icon: IconZiyarat },
+  { href: "/admin/background-media", label: "Background Media", icon: IconMedia },
+  { href: "/admin/promo-videos", label: "Promo Videos", icon: IconPromo },
+  { href: "/admin/branding", label: "Logo & Favicon", icon: IconBrand },
 ];
 
-export default function AdminSidebar({ email }: { email: string }) {
+export default function AdminSidebar({
+  email,
+  faviconUrl,
+}: {
+  email: string;
+  faviconUrl: string;
+}) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
 
@@ -66,7 +76,7 @@ export default function AdminSidebar({ email }: { email: string }) {
             title="Go to homepage"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icon.png" alt="" className="h-7 w-7 object-contain" aria-hidden />
+            <img src={faviconUrl} alt="" className="h-7 w-7 object-contain" aria-hidden />
           </Link>
           {expanded && (
             <Link href="/" className="min-w-0">
@@ -187,6 +197,57 @@ function IconPricing() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.41l9 9c.36.36.86.59 1.41.59.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" />
+    </svg>
+  );
+}
+
+function IconMedia() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="4" width="18" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="m3 15 5-4.5 4 3.5 3-2.5 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <circle cx="8" cy="9" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconPromo() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="2.5" y="5" width="15" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="m9.5 9 5 3-5 3V9z" fill="currentColor" />
+      <path d="m17.5 10 4-2.5v9l-4-2.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconBrand() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconZiyarat() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 2v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9 22V13a3 3 0 0 1 6 0v9" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path
+        d="M4 22v-8.5C4 9 7.5 6.5 8.5 5.5M20 22v-8.5C20 9 16.5 6.5 15.5 5.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M2 22h20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }

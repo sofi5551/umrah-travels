@@ -1,108 +1,54 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useCriticalProgress } from "@/lib/criticalLoadingManager";
+import { useEffect, useState } from "react";
 
 // Plain module state — resets on a real hard reload (fresh JS context) but
 // survives client-side <Link> navigation, since the root layout that renders
 // this provider isn't remounted between routes. That's exactly the signal we
-// want: show the splash once per hard load, never on in-app navigation —
-// models/images already fetched stay in the browser cache either way.
+// want: show the splash once per hard load, never on in-app navigation.
 let shownThisLoad = false;
 
-const MIN_VISIBLE_MS = 500;
-const SETTLE_DEBOUNCE_MS = 400;
-const SAFETY_TIMEOUT_MS = 15000;
-const FADE_MS = 600;
+// A short, fixed-duration branded splash — just enough to cover the initial
+// paint, not a "wait for everything to finish loading" screen. It used to
+// wait on window `load` (every image/video on the page) plus a 3D model's
+// own progress, which meant a heavy page made the splash itself feel slow.
+const SPLASH_MS = 700;
+const FADE_MS = 500;
 
-export default function GlobalLoaderProvider({ children }: { children: React.ReactNode }) {
+export default function GlobalLoaderProvider({
+  faviconUrl,
+  children,
+}: {
+  faviconUrl: string;
+  children: React.ReactNode;
+}) {
   const [visible] = useState(() => !shownThisLoad);
   const [fading, setFading] = useState(false);
   const [hidden, setHidden] = useState(!visible);
 
+  useEffect(() => {
+    if (!visible) return;
+    shownThisLoad = true;
+    const fadeTimer = setTimeout(() => setFading(true), SPLASH_MS);
+    const hideTimer = setTimeout(() => setHidden(true), SPLASH_MS + FADE_MS);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [visible]);
+
   return (
     <>
       {children}
-      {!hidden && (
-        <SplashScreen
-          fading={fading}
-          onDone={() => setHidden(true)}
-          startFade={() => setFading(true)}
-        />
-      )}
+      {!hidden && <SplashScreen faviconUrl={faviconUrl} fading={fading} />}
     </>
   );
 }
 
-// Three's DefaultLoadingManager (which every loader in this app reports to —
-// STLLoader, GLTFLoader, FBXLoader, OBJLoader/MTLLoader — unless given a
-// custom manager) tracks all in-flight fetches, so drei's useProgress gives a
-// live, page-wide view of every model currently loading. Combined with the
-// window `load` event (which covers regular images/fonts/CSS that loaders
-// don't touch), that's a real "everything's ready" signal.
-function SplashScreen({
-  fading,
-  startFade,
-  onDone,
-}: {
-  fading: boolean;
-  startFade: () => void;
-  onDone: () => void;
-}) {
-  const { active, progress } = useCriticalProgress();
-  const [windowLoaded, setWindowLoaded] = useState(false);
-  const [displayPercent, setDisplayPercent] = useState(8);
-  const maxPercentRef = useRef(8);
-  const mountedAt = useRef(Date.now());
-  const settleTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  const finish = useCallback(() => {
-    setDisplayPercent(100);
-    startFade();
-    setTimeout(onDone, FADE_MS);
-  }, [startFade, onDone]);
-
-  useEffect(() => {
-    shownThisLoad = true;
-
-    const onLoad = () => setWindowLoaded(true);
-    if (document.readyState === "complete") onLoad();
-    else window.addEventListener("load", onLoad);
-
-    const safety = setTimeout(finish, SAFETY_TIMEOUT_MS);
-
-    return () => {
-      window.removeEventListener("load", onLoad);
-      clearTimeout(safety);
-      clearTimeout(settleTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Blend window-load progress (half the bar) with model-loading progress
-  // (the other half), and never let the displayed number regress.
-  useEffect(() => {
-    const windowFraction = windowLoaded ? 1 : 0;
-    const modelFraction = progress / 100;
-    const raw = Math.round(((windowFraction + modelFraction) / 2) * 100);
-    const clamped = Math.max(raw, maxPercentRef.current);
-    maxPercentRef.current = clamped;
-    setDisplayPercent(Math.min(clamped, 96));
-  }, [windowLoaded, progress]);
-
-  useEffect(() => {
-    clearTimeout(settleTimer.current);
-    if (!windowLoaded || active) return;
-    settleTimer.current = setTimeout(() => {
-      const elapsed = Date.now() - mountedAt.current;
-      setTimeout(finish, Math.max(0, MIN_VISIBLE_MS - elapsed));
-    }, SETTLE_DEBOUNCE_MS);
-    return () => clearTimeout(settleTimer.current);
-  }, [windowLoaded, active, finish]);
-
+function SplashScreen({ faviconUrl, fading }: { faviconUrl: string; fading: boolean }) {
   return (
     <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-ink transition-opacity duration-[600ms] ease-out ${
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-ink transition-opacity duration-500 ease-out ${
         fading ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       role="status"
@@ -125,7 +71,7 @@ function SplashScreen({
         </svg>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/icon.png"
+          src={faviconUrl}
           alt=""
           className="h-12 w-12 animate-pulse-slow object-contain"
           aria-hidden
@@ -134,14 +80,6 @@ function SplashScreen({
 
       <p className="mt-7 font-display text-xl font-medium tracking-wide text-white">Haramain Ways</p>
       <p className="mt-1.5 text-xs uppercase tracking-[0.2em] text-goldsoft/80">Preparing your journey</p>
-
-      <div className="mt-8 h-[3px] w-48 overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-gold transition-[width] duration-300 ease-out"
-          style={{ width: `${displayPercent}%` }}
-        />
-      </div>
-      <p className="mt-2 text-[11px] tabular-nums text-white/40">{displayPercent}%</p>
     </div>
   );
 }

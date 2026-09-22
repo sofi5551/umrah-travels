@@ -90,7 +90,13 @@ export default async function AdminReviewsPage() {
         <p className="mt-1 text-sm text-stone">
           Shows up on the homepage alongside real submissions. Fully editable afterward.
         </p>
-        <AdminForm action={createReview} successMessage="Review added." className="mt-4 space-y-4">
+        <AdminForm
+          action={createReview}
+          successMessage="Review added."
+          confirmMessage="This publishes a new review on the live homepage. Continue?"
+          confirmLabel="Add review"
+          className="mt-4 space-y-4"
+        >
           <Field label="Name">
             <input name="name" required className="input" placeholder="Full name" />
           </Field>

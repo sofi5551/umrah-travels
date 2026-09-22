@@ -7,6 +7,7 @@ import WhatsAppFab from "./WhatsAppFab";
 import GlobalLoaderProvider from "./GlobalLoader";
 import type { SiteSettings } from "@/lib/siteSettings";
 import type { Vehicle, ServicePage } from "@/lib/data";
+import type { ZiyaratPage } from "@/lib/ziyaratData";
 
 /**
  * The public marketing site's chrome (Header, Footer, WhatsApp FAB, loading
@@ -18,11 +19,13 @@ export default function SiteChrome({
   settings,
   fleet,
   services,
+  ziyarat,
   children,
 }: {
   settings: SiteSettings;
   fleet: Vehicle[];
   services: ServicePage[];
+  ziyarat: ZiyaratPage[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -33,8 +36,8 @@ export default function SiteChrome({
   }
 
   return (
-    <GlobalLoaderProvider>
-      <Header settings={settings} fleet={fleet} services={services} />
+    <GlobalLoaderProvider faviconUrl={settings.faviconUrl}>
+      <Header settings={settings} fleet={fleet} services={services} ziyarat={ziyarat} />
       <main id="main">{children}</main>
       <Footer settings={settings} services={services} />
       <WhatsAppFab settings={settings} />

@@ -5,7 +5,8 @@ import { getSiteSettings } from "@/lib/siteSettings";
 import { getFleet } from "@/lib/fleetData";
 import BookingForm from "@/components/BookingForm";
 import SectionHeading from "@/components/SectionHeading";
-import ServicePricingNotices from "@/components/ServicePricingNotices";
+import PricingNotices from "@/components/PricingNotices";
+import MultilineText from "@/components/MultilineText";
 import WaveDivider from "@/components/WaveDivider";
 
 export const revalidate = 60;
@@ -18,7 +19,13 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const service = await getServiceBySlug(params.slug);
   if (!service) return {};
-  return { title: `${service.label} | Haramain Ways` };
+  const title = `${service.label} | Haramain Ways`;
+  return {
+    title,
+    description: service.description,
+    openGraph: { title, description: service.description },
+    twitter: { title, description: service.description },
+  };
 }
 
 export default async function ServiceDetailPage({ params }: { params: { slug: string } }) {
@@ -41,7 +48,13 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
             {service.from} → {service.to}
           </p>
           <h1 className="mt-3 font-display text-4xl font-medium">{service.label}</h1>
-          <p className="mt-5 max-w-2xl text-white/80">{service.description}</p>
+          {service.description && (
+            <MultilineText
+              text={service.description}
+              className="mt-5 max-w-2xl"
+              paragraphClassName="text-white/80"
+            />
+          )}
           <a
             href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20the%20${encodeURIComponent(
               service.label
@@ -172,7 +185,7 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
         )}
 
         <div className="mx-auto max-w-4xl px-4 pb-16 sm:px-8">
-          <ServicePricingNotices
+          <PricingNotices
             whatsappHref={whatsappHref(
               `Asalam-o-Alaikum! I want to confirm the fare for ${service.label}.`
             )}
@@ -188,7 +201,7 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
           />
         </div>
 
-        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+        <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

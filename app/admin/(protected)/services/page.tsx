@@ -85,7 +85,13 @@ export default async function AdminServicesPage() {
 
       <div className="mt-10 max-w-xl border border-sandline bg-white p-6">
         <h2 className="font-display text-lg text-ink">Add a service</h2>
-        <AdminForm action={createService} successMessage="Service added." className="mt-4 space-y-4">
+        <AdminForm
+          action={createService}
+          successMessage="Service added."
+          confirmMessage="This adds a new page to the live Services menu and listing. Continue?"
+          confirmLabel="Add service"
+          className="mt-4 space-y-4"
+        >
           <Field label="Label" hint="The name shown in the Services menu, listing, and page title — e.g. &ldquo;Makkah to Jeddah&rdquo;.">
             <input name="label" required className="input" placeholder="e.g. Makkah to Jeddah" />
           </Field>
@@ -99,7 +105,7 @@ export default async function AdminServicesPage() {
           </div>
           <Field
             label="Description (shown on the page — leave blank to auto-generate)"
-            hint="The intro paragraph at the top of this page, under the title."
+            hint="The intro text at the top of this page, under the title. Press Enter to start a new paragraph."
           >
             <textarea name="description" className="input min-h-20 resize-y" />
           </Field>

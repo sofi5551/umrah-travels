@@ -14,6 +14,7 @@ import {
 const FLEET_BUCKET = "fleet-images";
 const REVIEW_AVATAR_BUCKET = "review-avatars";
 const SERVICE_IMAGE_BUCKET = "service-images";
+const SITE_MEDIA_BUCKET = "site-media";
 
 async function requireAdmin() {
   const session = await getAdminSession();
@@ -24,6 +25,32 @@ async function requireAdmin() {
 function requireAdminDb() {
   if (!supabaseAdmin) throw new Error("Admin database isn't configured yet.");
   return supabaseAdmin;
+}
+
+/**
+ * Deletes a previously-uploaded file from storage when it's being replaced or
+ * its owning row is deleted, so old uploads don't pile up as orphaned files
+ * (against the free-tier storage cap). No-ops for anything that isn't a file
+ * in this bucket — e.g. the hardcoded local /images/... fleet photos, or the
+ * bundled /video1.mp4 default — and never throws: cleanup is best-effort and
+ * must not fail the save/delete that already succeeded.
+ */
+async function deleteFromStorage(
+  db: NonNullable<typeof supabaseAdmin>,
+  bucket: string,
+  url: string | null | undefined
+) {
+  if (!url) return;
+  const marker = `/storage/v1/object/public/${bucket}/`;
+  const index = url.indexOf(marker);
+  if (index === -1) return;
+  const path = url.slice(index + marker.length);
+  if (!path) return;
+  try {
+    await db.storage.from(bucket).remove([path]);
+  } catch {
+    // ignore — the save/delete itself already succeeded
+  }
 }
 
 function slugify(input: string) {
@@ -58,6 +85,578 @@ export async function updateContactDetails(formData: FormData) {
 
   revalidatePath("/", "layout");
   revalidatePath("/admin/contact-details");
+}
+
+export async function updateHeroVideo(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const videoFile = formData.get("video");
+  if (!(videoFile instanceof File) || videoFile.size === 0) {
+    throw new Error("A video file is required.");
+  }
+  if (!videoFile.type.startsWith("video/")) {
+    throw new Error("Please upload a video file.");
+  }
+
+  const { data: existing } = await db.from("site_settings").select("hero_video_url").eq("id", 1).single();
+
+  const extension = videoFile.name.split(".").pop() || "mp4";
+  const path = `hero/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await db.storage
+    .from(SITE_MEDIA_BUCKET)
+    .upload(path, videoFile, { upsert: false });
+  if (uploadError) throw new Error(`Couldn't upload video: ${uploadError.message}`);
+
+  const { data: publicUrl } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+
+  const { error } = await db
+    .from("site_settings")
+    .update({ hero_video_url: publicUrl.publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing?.hero_video_url);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/background-media");
+}
+
+// ---------------------------------------------------------------------------
+// Branding (logo + favicon)
+// ---------------------------------------------------------------------------
+
+export async function updateLogo(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("A logo image is required.");
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Please upload an image file.");
+  }
+
+  const { data: existing } = await db.from("site_settings").select("logo_url").eq("id", 1).single();
+
+  const extension = file.name.split(".").pop() || "png";
+  const path = `branding/logo-${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await db.storage
+    .from(SITE_MEDIA_BUCKET)
+    .upload(path, file, { upsert: false });
+  if (uploadError) throw new Error(`Couldn't upload logo: ${uploadError.message}`);
+
+  const { data: publicUrl } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+
+  const { error } = await db
+    .from("site_settings")
+    .update({ logo_url: publicUrl.publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing?.logo_url);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/branding");
+}
+
+export async function updateFavicon(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const file = formData.get("favicon");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("A favicon image is required.");
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Please upload an image file.");
+  }
+
+  const { data: existing } = await db.from("site_settings").select("favicon_url").eq("id", 1).single();
+
+  const extension = file.name.split(".").pop() || "png";
+  const path = `branding/favicon-${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await db.storage
+    .from(SITE_MEDIA_BUCKET)
+    .upload(path, file, { upsert: false });
+  if (uploadError) throw new Error(`Couldn't upload favicon: ${uploadError.message}`);
+
+  const { data: publicUrl } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+
+  const { error } = await db
+    .from("site_settings")
+    .update({ favicon_url: publicUrl.publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing?.favicon_url);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/branding");
+}
+
+// ---------------------------------------------------------------------------
+// Page background images
+// ---------------------------------------------------------------------------
+
+/**
+ * Shared upload+replace logic for the site_settings background-image
+ * columns below. Uploads the new file, points the given column at it, then
+ * deletes whatever the column pointed to before — so replacing one of these
+ * never leaves the old upload orphaned in storage.
+ */
+async function updateSiteBackgroundImage(
+  columnName: string,
+  pagePaths: string[],
+  formData: FormData
+) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("An image is required.");
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Please upload an image file.");
+  }
+
+  const { data: existing } = await db
+    .from("site_settings")
+    .select(columnName)
+    .eq("id", 1)
+    .single();
+
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `backgrounds/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await db.storage
+    .from(SITE_MEDIA_BUCKET)
+    .upload(path, file, { upsert: false });
+  if (uploadError) throw new Error(`Couldn't upload image: ${uploadError.message}`);
+
+  const { data: publicUrl } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+
+  const { error } = await db
+    .from("site_settings")
+    .update({ [columnName]: publicUrl.publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  const oldUrl = (existing as Record<string, string | null> | null)?.[columnName];
+  await deleteFromStorage(db, SITE_MEDIA_BUCKET, oldUrl);
+
+  revalidatePath("/", "layout");
+  for (const p of pagePaths) revalidatePath(p);
+  revalidatePath("/admin/background-media");
+}
+
+export async function updateHomepageQuoteBg(formData: FormData) {
+  await updateSiteBackgroundImage("homepage_quote_bg_url", ["/"], formData);
+}
+
+export async function updateHomepageWhyChooseBg(formData: FormData) {
+  await updateSiteBackgroundImage("homepage_why_choose_bg_url", ["/"], formData);
+}
+
+export async function updateAboutHeroBg(formData: FormData) {
+  await updateSiteBackgroundImage("about_hero_bg_url", ["/about"], formData);
+}
+
+export async function updateAboutMissionImage(formData: FormData) {
+  await updateSiteBackgroundImage("about_mission_image_url", ["/about"], formData);
+}
+
+export async function updateContactHeroBg(formData: FormData) {
+  await updateSiteBackgroundImage("contact_hero_bg_url", ["/contact"], formData);
+}
+
+export async function updateFleetHeroBg(formData: FormData) {
+  await updateSiteBackgroundImage("fleet_hero_bg_url", ["/fleet"], formData);
+}
+
+// ---------------------------------------------------------------------------
+// Homepage promo-video carousel
+// ---------------------------------------------------------------------------
+
+export async function updatePromoVideosVisibility(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { error } = await db
+    .from("site_settings")
+    .update({
+      promo_videos_enabled: formData.get("promo_videos_enabled") === "on",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/promo-videos");
+}
+
+async function uploadPromoVideo(db: NonNullable<typeof supabaseAdmin>, file: File) {
+  const extension = file.name.split(".").pop() || "mp4";
+  const path = `promo/${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from(SITE_MEDIA_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(`Couldn't upload video: ${error.message}`);
+  const { data } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function createPromoVideo(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const videoFile = formData.get("video");
+  if (!(videoFile instanceof File) || videoFile.size === 0) {
+    throw new Error("A video file is required.");
+  }
+  if (!videoFile.type.startsWith("video/")) {
+    throw new Error("Please upload a video file.");
+  }
+
+  const videoUrl = await uploadPromoVideo(db, videoFile);
+
+  const { error } = await db.from("promo_videos").insert({
+    video_url: videoUrl,
+    title: String(formData.get("title") || "").trim() || null,
+    sort_order: Number(formData.get("sort_order") || 0),
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/promo-videos");
+}
+
+export async function updatePromoVideo(id: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing, error: fetchError } = await db
+    .from("promo_videos")
+    .select("video_url")
+    .eq("id", id)
+    .single();
+  if (fetchError || !existing) throw new Error("Video not found.");
+
+  const update: Record<string, unknown> = {
+    title: String(formData.get("title") || "").trim() || null,
+    sort_order: Number(formData.get("sort_order") || 0),
+  };
+
+  const videoFile = formData.get("video");
+  const replacing = videoFile instanceof File && videoFile.size > 0;
+  if (replacing) {
+    if (!(videoFile as File).type.startsWith("video/")) {
+      throw new Error("Please upload a video file.");
+    }
+    update.video_url = await uploadPromoVideo(db, videoFile as File);
+  }
+
+  const { error } = await db.from("promo_videos").update(update).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  if (replacing) await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing.video_url);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/promo-videos");
+}
+
+export async function deletePromoVideo(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing } = await db.from("promo_videos").select("video_url").eq("id", id).single();
+
+  const { error } = await db.from("promo_videos").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  if (existing?.video_url) await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing.video_url);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/promo-videos");
+}
+
+// ---------------------------------------------------------------------------
+// Ziyarat pages
+// ---------------------------------------------------------------------------
+
+export async function updateZiyaratVisibility(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { error } = await db
+    .from("site_settings")
+    .update({
+      ziyarat_enabled: formData.get("ziyarat_enabled") === "on",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/ziyarat");
+}
+
+async function uploadZiyaratImage(db: NonNullable<typeof supabaseAdmin>, file: File) {
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `ziyarat/${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from(SITE_MEDIA_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(`Couldn't upload image: ${error.message}`);
+  const { data } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function getZiyaratSlug(db: NonNullable<typeof supabaseAdmin>, id: string) {
+  const { data } = await db.from("ziyarat_pages").select("slug").eq("id", id).single();
+  return data?.slug as string | undefined;
+}
+
+export async function createZiyaratPage(formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const label = String(formData.get("label") || "").trim();
+  if (!label) throw new Error("Label is required.");
+
+  const imageFile = formData.get("image");
+  let imageUrl: string | null = null;
+  if (imageFile instanceof File && imageFile.size > 0) {
+    imageUrl = await uploadZiyaratImage(db, imageFile);
+  }
+
+  const { error } = await db.from("ziyarat_pages").insert({
+    slug: slugify(label) || crypto.randomUUID(),
+    label,
+    description: String(formData.get("description") || "").trim() || null,
+    quote: String(formData.get("quote") || "").trim() || null,
+    image_url: imageUrl,
+    sort_order: Number(formData.get("sort_order") || 0),
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  revalidatePath("/ziyarat");
+  revalidatePath("/admin/ziyarat");
+}
+
+export async function updateZiyaratPage(id: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const label = String(formData.get("label") || "").trim();
+  if (!label) throw new Error("Label is required.");
+
+  const { data: existing } = await db.from("ziyarat_pages").select("image_url").eq("id", id).single();
+
+  const update: Record<string, unknown> = {
+    label,
+    description: String(formData.get("description") || "").trim() || null,
+    quote: String(formData.get("quote") || "").trim() || null,
+    sort_order: Number(formData.get("sort_order") || 0),
+  };
+
+  const imageFile = formData.get("image");
+  const replacingImage = imageFile instanceof File && imageFile.size > 0;
+  if (replacingImage) {
+    update.image_url = await uploadZiyaratImage(db, imageFile as File);
+  }
+
+  const { error } = await db.from("ziyarat_pages").update(update).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  if (replacingImage) await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing?.image_url);
+
+  const slug = await getZiyaratSlug(db, id);
+  revalidatePath("/", "layout");
+  revalidatePath("/ziyarat");
+  if (slug) revalidatePath(`/ziyarat/${slug}`);
+  revalidatePath("/admin/ziyarat");
+}
+
+export async function deleteZiyaratPage(id: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing } = await db
+    .from("ziyarat_pages")
+    .select("slug, image_url")
+    .eq("id", id)
+    .single();
+
+  // ziyarat_blocks rows cascade-delete with the page, but their storage
+  // files don't — clean those up first or they're orphaned for good.
+  const { data: blocks } = await db
+    .from("ziyarat_blocks")
+    .select("image_url")
+    .eq("ziyarat_id", id)
+    .eq("type", "image");
+
+  const { error } = await db.from("ziyarat_pages").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  if (existing?.image_url) await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing.image_url);
+  for (const block of blocks ?? []) {
+    await deleteFromStorage(db, SITE_MEDIA_BUCKET, block.image_url);
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/ziyarat");
+  if (existing?.slug) revalidatePath(`/ziyarat/${existing.slug}`);
+  revalidatePath("/admin/ziyarat");
+}
+
+// ---------------------------------------------------------------------------
+// Ziyarat content blocks (admin-built pricing tables / pricing images)
+// ---------------------------------------------------------------------------
+
+async function getZiyaratPageSlug(db: NonNullable<typeof supabaseAdmin>, ziyaratId: string) {
+  const { data } = await db.from("ziyarat_pages").select("slug").eq("id", ziyaratId).single();
+  return data?.slug as string | undefined;
+}
+
+async function revalidateZiyaratBlocks(db: NonNullable<typeof supabaseAdmin>, ziyaratId: string) {
+  const slug = await getZiyaratPageSlug(db, ziyaratId);
+  if (slug) revalidatePath(`/ziyarat/${slug}`);
+  revalidatePath(`/admin/ziyarat/${ziyaratId}`);
+}
+
+async function uploadZiyaratBlockImage(db: NonNullable<typeof supabaseAdmin>, file: File) {
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `ziyarat-blocks/${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from(SITE_MEDIA_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(`Couldn't upload image: ${error.message}`);
+  const { data } = db.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function createZiyaratTableBlock(ziyaratId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { columns, rows } = parseTableFields(formData);
+
+  const { error } = await db.from("ziyarat_blocks").insert({
+    ziyarat_id: ziyaratId,
+    type: "table",
+    heading: String(formData.get("heading") || "").trim() || null,
+    description: String(formData.get("description") || "").trim() || null,
+    columns,
+    rows,
+    sort_order: Number(formData.get("sort_order") || 0),
+  });
+
+  if (error) throw new Error(error.message);
+  await revalidateZiyaratBlocks(db, ziyaratId);
+}
+
+export async function updateZiyaratTableBlock(blockId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing, error: fetchError } = await db
+    .from("ziyarat_blocks")
+    .select("ziyarat_id")
+    .eq("id", blockId)
+    .single();
+  if (fetchError || !existing) throw new Error("Block not found.");
+
+  const { columns, rows } = parseTableFields(formData);
+
+  const { error } = await db
+    .from("ziyarat_blocks")
+    .update({
+      heading: String(formData.get("heading") || "").trim() || null,
+      description: String(formData.get("description") || "").trim() || null,
+      columns,
+      rows,
+      sort_order: Number(formData.get("sort_order") || 0),
+    })
+    .eq("id", blockId);
+
+  if (error) throw new Error(error.message);
+  await revalidateZiyaratBlocks(db, existing.ziyarat_id);
+}
+
+export async function createZiyaratImageBlock(ziyaratId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const imageFile = formData.get("image");
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
+    throw new Error("An image is required.");
+  }
+  const imageUrl = await uploadZiyaratBlockImage(db, imageFile);
+
+  const { error } = await db.from("ziyarat_blocks").insert({
+    ziyarat_id: ziyaratId,
+    type: "image",
+    heading: String(formData.get("heading") || "").trim() || null,
+    description: String(formData.get("description") || "").trim() || null,
+    image_url: imageUrl,
+    sort_order: Number(formData.get("sort_order") || 0),
+  });
+
+  if (error) throw new Error(error.message);
+  await revalidateZiyaratBlocks(db, ziyaratId);
+}
+
+export async function updateZiyaratImageBlock(blockId: string, formData: FormData) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing, error: fetchError } = await db
+    .from("ziyarat_blocks")
+    .select("ziyarat_id, image_url")
+    .eq("id", blockId)
+    .single();
+  if (fetchError || !existing) throw new Error("Block not found.");
+
+  const update: Record<string, unknown> = {
+    heading: String(formData.get("heading") || "").trim() || null,
+    description: String(formData.get("description") || "").trim() || null,
+    sort_order: Number(formData.get("sort_order") || 0),
+  };
+
+  const imageFile = formData.get("image");
+  const replacingImage = imageFile instanceof File && imageFile.size > 0;
+  if (replacingImage) {
+    update.image_url = await uploadZiyaratBlockImage(db, imageFile as File);
+  }
+
+  const { error } = await db.from("ziyarat_blocks").update(update).eq("id", blockId);
+  if (error) throw new Error(error.message);
+
+  if (replacingImage) await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing.image_url);
+
+  await revalidateZiyaratBlocks(db, existing.ziyarat_id);
+}
+
+export async function deleteZiyaratBlock(blockId: string) {
+  await requireAdmin();
+  const db = requireAdminDb();
+
+  const { data: existing } = await db
+    .from("ziyarat_blocks")
+    .select("ziyarat_id, image_url")
+    .eq("id", blockId)
+    .single();
+
+  const { error } = await db.from("ziyarat_blocks").delete().eq("id", blockId);
+  if (error) throw new Error(error.message);
+
+  if (existing?.image_url) await deleteFromStorage(db, SITE_MEDIA_BUCKET, existing.image_url);
+  if (existing?.ziyarat_id) await revalidateZiyaratBlocks(db, existing.ziyarat_id);
 }
 
 const SOCIAL_PLATFORMS = [
@@ -166,12 +765,17 @@ export async function updateVehicle(id: string, formData: FormData) {
   };
 
   const imageFile = formData.get("image");
+  let previousImageUrl: string | null | undefined;
   if (imageFile instanceof File && imageFile.size > 0) {
+    const { data: existing } = await db.from("fleet").select("image_url").eq("id", id).single();
+    previousImageUrl = existing?.image_url;
     update.image_url = await uploadFleetImage(db, imageFile);
   }
 
   const { error } = await db.from("fleet").update(update).eq("id", id);
   if (error) throw new Error(error.message);
+
+  if (previousImageUrl) await deleteFromStorage(db, FLEET_BUCKET, previousImageUrl);
 
   revalidatePath("/", "layout");
   revalidatePath("/fleet");
@@ -182,8 +786,12 @@ export async function deleteVehicle(id: string) {
   await requireAdmin();
   const db = requireAdminDb();
 
+  const { data: existing } = await db.from("fleet").select("image_url").eq("id", id).single();
+
   const { error } = await db.from("fleet").delete().eq("id", id);
   if (error) throw new Error(error.message);
+
+  await deleteFromStorage(db, FLEET_BUCKET, existing?.image_url);
 
   revalidatePath("/", "layout");
   revalidatePath("/fleet");
@@ -258,8 +866,20 @@ export async function deleteService(id: string) {
   await requireAdmin();
   const db = requireAdminDb();
 
+  // service_blocks rows cascade-delete with the service, but their storage
+  // files don't — clean those up first or they're orphaned for good.
+  const { data: blocks } = await db
+    .from("service_blocks")
+    .select("image_url")
+    .eq("service_id", id)
+    .eq("type", "image");
+
   const { error } = await db.from("services").delete().eq("id", id);
   if (error) throw new Error(error.message);
+
+  for (const block of blocks ?? []) {
+    await deleteFromStorage(db, SERVICE_IMAGE_BUCKET, block.image_url);
+  }
 
   revalidatePath("/services");
   revalidatePath("/admin/services");
@@ -387,7 +1007,7 @@ export async function updateImageBlock(blockId: string, formData: FormData) {
 
   const { data: existing, error: fetchError } = await db
     .from("service_blocks")
-    .select("service_id")
+    .select("service_id, image_url")
     .eq("id", blockId)
     .single();
   if (fetchError || !existing) throw new Error("Block not found.");
@@ -399,12 +1019,16 @@ export async function updateImageBlock(blockId: string, formData: FormData) {
   };
 
   const imageFile = formData.get("image");
-  if (imageFile instanceof File && imageFile.size > 0) {
-    update.image_url = await uploadServiceImage(db, imageFile);
+  const replacingImage = imageFile instanceof File && imageFile.size > 0;
+  if (replacingImage) {
+    update.image_url = await uploadServiceImage(db, imageFile as File);
   }
 
   const { error } = await db.from("service_blocks").update(update).eq("id", blockId);
   if (error) throw new Error(error.message);
+
+  if (replacingImage) await deleteFromStorage(db, SERVICE_IMAGE_BUCKET, existing.image_url);
+
   await revalidateServiceBlocks(db, existing.service_id);
 }
 
@@ -414,13 +1038,14 @@ export async function deleteServiceBlock(blockId: string) {
 
   const { data: existing } = await db
     .from("service_blocks")
-    .select("service_id")
+    .select("service_id, image_url")
     .eq("id", blockId)
     .single();
 
   const { error } = await db.from("service_blocks").delete().eq("id", blockId);
   if (error) throw new Error(error.message);
 
+  if (existing?.image_url) await deleteFromStorage(db, SERVICE_IMAGE_BUCKET, existing.image_url);
   if (existing?.service_id) await revalidateServiceBlocks(db, existing.service_id);
 }
 
@@ -447,8 +1072,10 @@ export async function deleteContact(id: string) {
 export async function deleteReview(id: string) {
   await requireAdmin();
   const db = requireAdminDb();
+  const { data: existing } = await db.from("reviews").select("avatar_url").eq("id", id).single();
   const { error } = await db.from("reviews").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  if (existing?.avatar_url) await deleteFromStorage(db, REVIEW_AVATAR_BUCKET, existing.avatar_url);
   revalidatePath("/");
   revalidatePath("/admin/reviews");
 }
@@ -503,7 +1130,7 @@ export async function updateReview(id: string, formData: FormData) {
 
   const { data: existing, error: fetchError } = await db
     .from("reviews")
-    .select("source")
+    .select("source, avatar_url")
     .eq("id", id)
     .single();
 
@@ -523,12 +1150,15 @@ export async function updateReview(id: string, formData: FormData) {
   };
 
   const avatarFile = formData.get("avatar");
-  if (avatarFile instanceof File && avatarFile.size > 0) {
-    update.avatar_url = await uploadReviewAvatar(db, avatarFile);
+  const replacingAvatar = avatarFile instanceof File && avatarFile.size > 0;
+  if (replacingAvatar) {
+    update.avatar_url = await uploadReviewAvatar(db, avatarFile as File);
   }
 
   const { error } = await db.from("reviews").update(update).eq("id", id);
   if (error) throw new Error(error.message);
+
+  if (replacingAvatar) await deleteFromStorage(db, REVIEW_AVATAR_BUCKET, existing.avatar_url);
 
   revalidatePath("/");
   revalidatePath("/admin/reviews");

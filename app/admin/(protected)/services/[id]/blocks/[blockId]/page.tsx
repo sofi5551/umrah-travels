@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -6,6 +5,7 @@ import { updateTableBlock, updateImageBlock } from "@/app/admin/actions";
 import AdminForm from "@/components/admin/AdminForm";
 import SubmitButton from "@/components/admin/SubmitButton";
 import TableBlockBuilder from "@/components/admin/TableBlockBuilder";
+import BackButton from "@/components/admin/BackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -41,18 +41,20 @@ export default async function EditServiceBlockPage({
 
   return (
     <div>
-      <Link href={`/admin/services/${params.id}`} className="text-sm text-ink hover:text-gold">
-        ← Back to service
-      </Link>
-      <h1 className="mt-2 font-display text-2xl text-ink">
-        Edit {block.type === "table" ? "table" : "image"} block
-      </h1>
+      <div className="flex items-center gap-3">
+        <BackButton href={`/admin/services/${params.id}`} />
+        <h1 className="font-display text-2xl text-ink">
+          Edit {block.type === "table" ? "table" : "image"} block
+        </h1>
+      </div>
 
       <div className="mt-6 max-w-xl border border-sandline bg-white p-6">
         {block.type === "table" ? (
           <AdminForm
             action={updateTableBlock.bind(null, block.id)}
             successMessage="Table updated."
+            confirmMessage="This updates this table on the live service page. Continue?"
+            confirmLabel="Save changes"
             className="space-y-4"
           >
             <Field label="Heading" hint="Title shown above the table. Leave blank to show no title.">
@@ -94,6 +96,8 @@ export default async function EditServiceBlockPage({
           <AdminForm
             action={updateImageBlock.bind(null, block.id)}
             successMessage="Image updated."
+            confirmMessage="This updates this image on the live service page. Continue?"
+            confirmLabel="Save changes"
             className="space-y-4"
           >
             <Field label="Heading" hint="Title shown above the image. Leave blank to show no title.">

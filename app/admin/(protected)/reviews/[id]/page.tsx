@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { updateReview } from "@/app/admin/actions";
 import AdminForm from "@/components/admin/AdminForm";
 import SubmitButton from "@/components/admin/SubmitButton";
+import BackButton from "@/components/admin/BackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default async function EditReviewPage({ params }: { params: { id: string 
   if (review.source !== "admin") {
     return (
       <div>
-        <h1 className="font-display text-2xl text-ink">Edit review</h1>
+        <div className="flex items-center gap-3">
+          <BackButton href="/admin/reviews" />
+          <h1 className="font-display text-2xl text-ink">Edit review</h1>
+        </div>
         <p className="mt-4 max-w-lg border border-sandline bg-white p-6 text-sm text-stone">
           This review was submitted by a user and can&rsquo;t be edited — you can delete it from
           the Reviews list instead.
@@ -44,7 +48,10 @@ export default async function EditReviewPage({ params }: { params: { id: string 
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink">Edit {review.name}&rsquo;s review</h1>
+      <div className="flex items-center gap-3">
+        <BackButton href="/admin/reviews" />
+        <h1 className="font-display text-2xl text-ink">Edit {review.name}&rsquo;s review</h1>
+      </div>
 
       <div className="mt-6 max-w-xl border border-sandline bg-white p-6">
         {review.avatar_url && (
@@ -55,6 +62,8 @@ export default async function EditReviewPage({ params }: { params: { id: string 
         <AdminForm
           action={updateReview.bind(null, review.id)}
           successMessage="Review updated."
+          confirmMessage="This updates this review on the live homepage. Continue?"
+          confirmLabel="Save changes"
           className="space-y-4"
         >
           <Field label="Name">

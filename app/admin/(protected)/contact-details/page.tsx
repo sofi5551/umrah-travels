@@ -39,6 +39,8 @@ export default async function AdminContactDetailsPage() {
         <AdminForm
           action={updateContactDetails}
           successMessage="Contact details updated."
+          confirmMessage="This updates the phone, email, and address shown across the site (header, footer, and Contact page). Continue?"
+          confirmLabel="Save changes"
           className="mt-6 max-w-lg space-y-4"
         >
           <Field label="Phone">

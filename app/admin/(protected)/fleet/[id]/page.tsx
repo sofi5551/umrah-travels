@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { updateVehicle } from "@/app/admin/actions";
 import AdminForm from "@/components/admin/AdminForm";
 import SubmitButton from "@/components/admin/SubmitButton";
+import BackButton from "@/components/admin/BackButton";
 import { DEFAULT_BOOKING_NOTE, DEFAULT_COMFORT_NOTE, buildDefaultDescription } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,10 @@ export default async function EditVehiclePage({ params }: { params: { id: string
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink">Edit {vehicle.name}</h1>
+      <div className="flex items-center gap-3">
+        <BackButton href="/admin/fleet" />
+        <h1 className="font-display text-2xl text-ink">Edit {vehicle.name}</h1>
+      </div>
 
       <div className="mt-6 max-w-xl border border-sandline bg-white p-6">
         {vehicle.image_url && (
@@ -51,6 +55,8 @@ export default async function EditVehiclePage({ params }: { params: { id: string
         <AdminForm
           action={updateVehicle.bind(null, vehicle.id)}
           successMessage="Vehicle updated."
+          confirmMessage="This updates this vehicle everywhere it's shown on the live site. Continue?"
+          confirmLabel="Save changes"
           className="space-y-4"
         >
           <Field label="Name">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Vehicle, ServicePage } from "@/lib/data";
 import type { SiteSettings } from "@/lib/siteSettings";
+import type { ZiyaratPage } from "@/lib/ziyaratData";
 
 function NavDropdown({
   label,
@@ -51,18 +52,26 @@ export default function Header({
   settings,
   fleet,
   services,
+  ziyarat,
 }: {
   settings: SiteSettings;
   fleet: Vehicle[];
   services: ServicePage[];
+  ziyarat: ZiyaratPage[];
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const fleetLinks = fleet.filter((v) => v.hasDetailPage);
+  const showZiyarat = settings.ziyaratEnabled;
 
   return (
     <header className="sticky top-0 z-50 border-b border-sandline bg-white/95 backdrop-blur">
       <div className="flex items-center justify-center gap-6 border-b border-sandline bg-ink px-4 py-1.5 text-xs text-white/90 sm:px-8">
-        <a href={`tel:${settings.phone}`} className="flex items-center gap-1.5 hover:text-gold">
+        <a
+          href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 hover:text-gold"
+        >
           <svg
             className="h-3.5 w-3"
             fill="currentColor"
@@ -88,13 +97,10 @@ export default function Header({
         </span>
       </div>
 
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-8 lg:items-end">
-        <Link href="/" className="flex items-center gap-2.5 lg:items-end">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-8">
+        <Link href="/" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.png" alt="" className="h-12 w-12 object-contain" aria-hidden />
-          <span className="font-display text-xl font-semibold leading-none text-ink">
-            Haramain Ways
-          </span>
+          <img src={settings.logoUrl} alt="Haramain Ways" className="h-20 w-auto sm:h-24" />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -103,6 +109,13 @@ export default function Header({
             href="/services"
             items={services.map((s) => ({ slug: s.slug, label: s.label, base: "/services" }))}
           />
+          {showZiyarat && (
+            <NavDropdown
+              label="Ziyarat"
+              href="/ziyarat"
+              items={ziyarat.map((p) => ({ slug: p.slug, label: p.label, base: "/ziyarat" }))}
+            />
+          )}
           <NavDropdown
             label="Fleet"
             href="/fleet"
@@ -139,6 +152,9 @@ export default function Header({
       {mobileOpen && (
         <div className="border-t border-sandline bg-white px-4 py-4 lg:hidden">
           <MobileSection title="Services" base="/services" items={services} labelKey="label" />
+          {showZiyarat && (
+            <MobileSection title="Ziyarat" base="/ziyarat" items={ziyarat} labelKey="label" />
+          )}
           <MobileSection
             title="Fleet"
             base="/fleet"

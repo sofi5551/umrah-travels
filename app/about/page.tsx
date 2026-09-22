@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import WaveDivider from "@/components/WaveDivider";
+import { getSiteSettings } from "@/lib/siteSettings";
 
 export const metadata = { title: "About | Haramain Ways" };
 
@@ -81,13 +82,15 @@ const coreValues = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const settings = await getSiteSettings();
+
   return (
     <>
       {/* About Us — hero */}
       <section className="relative overflow-hidden text-white">
         <Image
-          src="/images/about-us.png"
+          src={settings.aboutHeroBgUrl}
           alt="Interior of Masjid an-Nabawi"
           fill
           sizes="100vw"
@@ -170,7 +173,7 @@ export default function AboutPage() {
             <div className="lg:col-span-6">
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-xl">
                 <Image
-                  src="/images/our-mission.png"
+                  src={settings.aboutMissionImageUrl}
                   alt="Courtyard canopies at Masjid an-Nabawi"
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"
@@ -210,7 +213,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+        <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

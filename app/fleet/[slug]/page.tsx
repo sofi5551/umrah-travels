@@ -16,7 +16,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const vehicle = await getVehicleBySlug(params.slug);
   if (!vehicle) return {};
-  return { title: `${vehicle.name} | Haramain Ways` };
+  const title = `${vehicle.name} | Haramain Ways`;
+  return {
+    title,
+    description: vehicle.description,
+    openGraph: {
+      title,
+      description: vehicle.description,
+      images: vehicle.image ? [vehicle.image] : undefined,
+    },
+    twitter: { title, description: vehicle.description },
+  };
 }
 
 export default async function VehicleDetailPage({ params }: { params: { slug: string } }) {
@@ -87,7 +97,7 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
             </dl>
           </div>
         </div>
-        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+        <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

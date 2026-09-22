@@ -4,7 +4,11 @@ import { getSiteSettings } from "@/lib/siteSettings";
 import FleetCard from "@/components/FleetCard";
 import WaveDivider from "@/components/WaveDivider";
 
-export const metadata = { title: "Our Fleet | Haramain Ways" };
+export const metadata = {
+  title: "Our Fleet | Haramain Ways",
+  description:
+    "A modern fleet of sedans, vans, and buses for Umrah and Hajj pilgrims — private, non-shared vehicles matched to your group size and luggage.",
+};
 export const revalidate = 60;
 
 export default async function FleetIndexPage() {
@@ -13,7 +17,7 @@ export default async function FleetIndexPage() {
   return (
     <section className="relative overflow-hidden text-white">
       <Image
-        src="/images/our-fleet-background.png"
+        src={settings.fleetHeroBgUrl}
         alt="Golden desert dunes and sandstone cliffs in Saudi Arabia"
         fill
         sizes="100vw"
@@ -53,7 +57,7 @@ export default async function FleetIndexPage() {
         </div>
       </div>
 
-      <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+      <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
     </section>
   );
 }

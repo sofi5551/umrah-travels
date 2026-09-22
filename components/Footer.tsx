@@ -21,7 +21,7 @@ export default function Footer({
     .map((s) => ({ label: s.label, href: s.link.url }));
 
   return (
-    <footer className="bg-inkdeep text-white/80 transition-[filter] duration-300 hover:brightness-90">
+    <footer className="bg-ink text-white/80 transition-[filter] duration-300 hover:brightness-90">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8">
         <p className="max-w-2xl text-sm leading-relaxed text-white/70">
           We provide safe and reliable transportation for Umrah and Hajj
@@ -57,7 +57,16 @@ export default function Footer({
           <div>
             <h3 className="font-display text-base text-white">Get in touch</h3>
             <ul className="mt-4 space-y-2 text-sm">
-              <li><a href={`tel:${settings.phone}`} className="hover:text-gold">{settings.phone}</a></li>
+              <li>
+                <a
+                  href={`https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gold"
+                >
+                  {settings.phone}
+                </a>
+              </li>
               <li><a href={`mailto:${settings.email}`} className="hover:text-gold">{settings.email}</a></li>
               {settings.addressEnabled && (
                 <li className="pt-2 text-white/60">{settings.address}</li>

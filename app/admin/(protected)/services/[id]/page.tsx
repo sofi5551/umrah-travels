@@ -11,6 +11,7 @@ import AdminForm from "@/components/admin/AdminForm";
 import SubmitButton from "@/components/admin/SubmitButton";
 import ConfirmDeleteButton from "@/components/admin/ConfirmDeleteButton";
 import TableBlockBuilder from "@/components/admin/TableBlockBuilder";
+import BackButton from "@/components/admin/BackButton";
 import { buildDefaultServiceDescription } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -56,12 +57,17 @@ export default async function EditServicePage({ params }: { params: { id: string
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink">Edit {service.label}</h1>
+      <div className="flex items-center gap-3">
+        <BackButton href="/admin/services" />
+        <h1 className="font-display text-2xl text-ink">Edit {service.label}</h1>
+      </div>
 
       <div className="mt-6 max-w-xl border border-sandline bg-white p-6">
         <AdminForm
           action={updateService.bind(null, service.id)}
           successMessage="Service updated."
+          confirmMessage="This updates this service page on the live site. Continue?"
+          confirmLabel="Save changes"
           className="space-y-4"
         >
           <Field label="Label" hint="The name shown in the Services menu, listing, and page title.">
@@ -85,7 +91,7 @@ export default async function EditServicePage({ params }: { params: { id: string
               />
             </Field>
           </div>
-          <Field label="Description (shown on the page)" hint="The intro paragraph at the top of this page, under the title.">
+          <Field label="Description (shown on the page)" hint="The intro text at the top of this page, under the title. Press Enter to start a new paragraph.">
             <textarea
               name="description"
               className="input min-h-20 resize-y"
@@ -170,6 +176,8 @@ export default async function EditServicePage({ params }: { params: { id: string
             <AdminForm
               action={createTableBlock.bind(null, service.id)}
               successMessage="Table added."
+              confirmMessage="This adds a new pricing table to the live service page. Continue?"
+              confirmLabel="Add table"
               className="mt-4 space-y-4"
             >
               <Field label="Heading" hint="Title shown above the table, e.g. &ldquo;Airport Fare&rdquo;. Leave blank to show no title.">
@@ -213,6 +221,8 @@ export default async function EditServicePage({ params }: { params: { id: string
             <AdminForm
               action={createImageBlock.bind(null, service.id)}
               successMessage="Image added."
+              confirmMessage="This adds a new pricing image to the live service page. Continue?"
+              confirmLabel="Add image"
               className="mt-4 space-y-4"
             >
               <Field label="Heading" hint="Title shown above the image, e.g. &ldquo;Hourly Rates&rdquo;. Leave blank to show no title.">

@@ -104,7 +104,13 @@ export default async function AdminFleetPage() {
 
       <div className="mt-10 max-w-xl border border-sandline bg-white p-6">
         <h2 className="font-display text-lg text-ink">Add a vehicle</h2>
-        <AdminForm action={createVehicle} successMessage="Vehicle added." className="mt-4 space-y-4">
+        <AdminForm
+          action={createVehicle}
+          successMessage="Vehicle added."
+          confirmMessage="This adds a new vehicle to the live Fleet page and booking form. Continue?"
+          confirmLabel="Add vehicle"
+          className="mt-4 space-y-4"
+        >
           <Field label="Name">
             <input name="name" required className="input" placeholder="e.g. Toyota Camry" />
           </Field>

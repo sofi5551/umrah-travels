@@ -1,16 +1,17 @@
 import BookingForm from "@/components/BookingForm";
 import SectionHeading from "@/components/SectionHeading";
 import RouteMotif from "@/components/RouteMotif";
-import HeroModel from "@/components/HeroModel";
 import ScrollReveal from "@/components/ScrollReveal";
 import FleetCard from "@/components/FleetCard";
 import Testimonials from "@/components/Testimonials";
 import Faq from "@/components/Faq";
 import WaveDivider from "@/components/WaveDivider";
+import PromoVideoCarousel from "@/components/PromoVideoCarousel";
 import { faqs, steps } from "@/lib/data";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { getFleet } from "@/lib/fleetData";
 import { getServices } from "@/lib/servicesData";
+import { getPromoVideos } from "@/lib/promoVideos";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -176,10 +177,11 @@ const taxiServices = [
 ];
 
 export default async function HomePage() {
-  const [settings, fleet, services] = await Promise.all([
+  const [settings, fleet, services, promoVideos] = await Promise.all([
     getSiteSettings(),
     getFleet(),
     getServices(),
+    getPromoVideos(),
   ]);
 
   return (
@@ -187,9 +189,16 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative flex min-h-[calc(100vh-6.5rem)] items-center overflow-hidden bg-ink text-white">
         <div className="pointer-events-none absolute inset-0 opacity-70 lg:opacity-90">
-          <HeroModel />
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="h-full w-full object-cover"
+            src={settings.heroVideoUrl}
+          />
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-ink/90 via-ink/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/25 to-transparent" />
         <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 py-16 sm:px-8 lg:grid-cols-2 lg:py-24">
           <div>
             <p className="text-sm font-medium text-goldsoft">
@@ -238,14 +247,13 @@ export default async function HomePage() {
       {/* Quote form */}
       <section id="quote" className="relative overflow-hidden border-b border-sandline">
         <Image
-          src="/images/safa-marwa.png"
+          src={settings.homepageQuoteBgUrl}
           alt="Safa and Marwa in Makkah"
           fill
           sizes="100vw"
           priority
           className="object-cover"
         />
-        <WaveDivider color="text-ink" />
         <div className="relative mx-auto max-w-3xl px-4 py-16 sm:px-8">
           <ScrollReveal>
             <div className="rounded-2xl bg-white/60 p-6 shadow-lg backdrop-blur-sm sm:p-10">
@@ -315,6 +323,12 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
+
+            {settings.promoVideosEnabled && promoVideos.length > 0 && (
+              <div className="mx-auto mt-16 max-w-3xl">
+                <PromoVideoCarousel videos={promoVideos} />
+              </div>
+            )}
           </ScrollReveal>
 
           <ScrollReveal className="mt-16">
@@ -549,7 +563,7 @@ export default async function HomePage() {
       {/* Why choose us */}
       <section className="relative overflow-hidden text-white">
         <Image
-          src="/images/masjid-nabawi.png"
+          src={settings.homepageWhyChooseBgUrl}
           alt="Masjid an-Nabawi in Madinah at night"
           fill
           sizes="100vw"
@@ -681,7 +695,7 @@ export default async function HomePage() {
           </ScrollReveal>
         </div>
 
-        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+        <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
       </section>
     </>
   );

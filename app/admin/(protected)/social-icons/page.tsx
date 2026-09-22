@@ -56,6 +56,8 @@ export default async function AdminSocialIconsPage() {
         <AdminForm
           action={updateSocialLinks}
           successMessage="Social links updated."
+          confirmMessage="This updates the social links shown in the site footer. Continue?"
+          confirmLabel="Save changes"
           className="mt-6 max-w-lg space-y-5"
         >
           {platforms.map((p) => (

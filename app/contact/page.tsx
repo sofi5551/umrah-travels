@@ -38,7 +38,7 @@ export default async function ContactPage() {
       icon: IconPhone,
       label: "Phone / WhatsApp",
       value: settings.phone,
-      href: `tel:${settings.phone}`,
+      href: `https://wa.me/${settings.whatsappNumber}?text=Asalam-o-Alaikum!%20I%20want%20to%20book%20a%20taxi`,
     },
     {
       icon: IconMail,
@@ -61,7 +61,7 @@ export default async function ContactPage() {
   return (
     <section className="relative overflow-hidden">
       <Image
-        src="/images/contact-page.png"
+        src={settings.contactHeroBgUrl}
         alt="Masjid al-Haram and the Makkah Royal Clock Tower at sunset"
         fill
         sizes="100vw"
@@ -103,7 +103,13 @@ export default async function ContactPage() {
                   </div>
                 );
                 return href ? (
-                  <a key={label} href={href} className="block">
+                  <a
+                    key={label}
+                    href={href}
+                    target={href.startsWith("http") ? "_blank" : undefined}
+                    rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="block"
+                  >
                     {content}
                   </a>
                 ) : (
@@ -143,7 +149,7 @@ export default async function ContactPage() {
         </div>
       </div>
 
-      <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+      <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
     </section>
   );
 }

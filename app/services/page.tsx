@@ -2,10 +2,14 @@ import Link from "next/link";
 import { getServices } from "@/lib/servicesData";
 import { getSiteSettings } from "@/lib/siteSettings";
 import SectionHeading from "@/components/SectionHeading";
-import ServicePricingNotices from "@/components/ServicePricingNotices";
+import PricingNotices from "@/components/PricingNotices";
 import WaveDivider from "@/components/WaveDivider";
 
-export const metadata = { title: "Our Services | Haramain Ways" };
+export const metadata = {
+  title: "Our Services | Haramain Ways",
+  description:
+    "Private, door-to-door transfers between Saudi Arabia's major cities and airports. Fixed fares, licensed drivers, and vehicles for every group size.",
+};
 export const revalidate = 60;
 
 export default async function ServicesIndexPage() {
@@ -66,7 +70,7 @@ export default async function ServicesIndexPage() {
           </div>
 
           <div className="mx-auto mt-14 max-w-4xl">
-            <ServicePricingNotices
+            <PricingNotices
               whatsappHref={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
                 "Asalam-o-Alaikum! I want to confirm a fare before travel."
               )}`}
@@ -81,7 +85,7 @@ export default async function ServicesIndexPage() {
             />
           </div>
         </div>
-        <WaveDivider color="text-inkdeep" position="bottom" dimOnFooterHover />
+        <WaveDivider color="text-ink" position="bottom" dimOnFooterHover />
       </section>
     </>
   );
