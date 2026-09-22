@@ -1,19 +1,24 @@
+// Emergency fallback only — consumed by lib/siteSettings.ts's getSiteSettings(),
+// which is what every page actually reads from. The live phone/email/address/
+// social links always come from the admin-editable site_settings table; this
+// object is only shown if Supabase is fully unreachable. Left blank on
+// purpose: a placeholder-looking number/email here previously got crawled
+// and cached by Google during an outage, so nothing resembling real contact
+// info should ever live in source code — only in the database.
 export const site = {
   name: "Haramain Ways",
-  phone: "+923078970656",
-  whatsappNumber: "923078970656",
-  email: "contact@haramainways.com",
-  address:
-    "Al-Aziziyah Al-Janoubiyah, King Khalid Bridge, Aljamia District, Makkah - C.R 7050292502",
+  phone: "",
+  whatsappNumber: "",
+  email: "",
+  address: "",
   social: {
-    facebook: "https://www.facebook.com/vipumrahtaxi/",
-    instagram: "https://www.instagram.com/vipumrahtaxi/",
-    youtube: "https://www.youtube.com/@vipumrahtaxicom",
-    pinterest: "https://www.pinterest.com/vipumrahtaxi/",
-    tiktok: "https://www.tiktok.com/@vipumrahtaxicom",
-    linkedin: "https://www.linkedin.com/company/vip-umrah-taxi/",
-    playstore:
-      "https://play.google.com/store/apps/details?id=com.sa.vipumrahtaxi",
+    facebook: "",
+    instagram: "",
+    youtube: "",
+    pinterest: "",
+    tiktok: "",
+    linkedin: "",
+    playstore: "",
   },
 };
 
